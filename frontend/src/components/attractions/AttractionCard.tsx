@@ -4,6 +4,7 @@ import { Attraction } from "../../types/attraction.types";
 import { Badge, Rating } from "../ui";
 import { cn } from "../../utils/cn";
 import { getLocalizedText } from "../../utils/localization";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface AttractionCardProps {
   attraction: Attraction;
@@ -12,6 +13,9 @@ interface AttractionCardProps {
 
 const AttractionCard = ({ attraction, className }: AttractionCardProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canManage =
+    user?.role === "manager" || user?.role === "admin";
 
   const handleClick = () => {
     navigate(`/attractions/${attraction.id}`);
@@ -45,9 +49,28 @@ const AttractionCard = ({ attraction, className }: AttractionCardProps) => {
 
         {/* Overlay with View Details button (shown on hover) */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
-          <button className="bg-white text-primary-600 px-6 py-2 rounded-lg font-medium hover:bg-primary-50 transition-colors">
-            View Details
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className="bg-white text-primary-600 px-6 py-2 rounded-lg font-medium hover:bg-primary-50 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClick();
+              }}
+            >
+              View Details
+            </button>
+            {canManage && (
+              <button
+                className="bg-primary-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-600 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/attractions/${attraction.id}?edit=1`);
+                }}
+              >
+                Edit
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

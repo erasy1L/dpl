@@ -52,7 +52,7 @@ const PreferencesCard = ({ onUpdate }: PreferencesCardProps) => {
   const toggleCity = (city: string) => {
     setPreferences((prev) => ({
       ...prev,
-      preferredCities: prev.preferred_cities.includes(city)
+      preferred_cities: prev.preferred_cities.includes(city)
         ? prev.preferred_cities.filter((c) => c !== city)
         : [...prev.preferred_cities, city],
     }));
@@ -114,7 +114,9 @@ const PreferencesCard = ({ onUpdate }: PreferencesCardProps) => {
                 onChange={() => toggleCategory(category.id)}
                 className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
               />
-              <span className="text-sm text-gray-700">{category.name}</span>
+              <span className="text-sm text-gray-700">
+                {category.name_en || category.name_ru || `Category #${category.id}`}
+              </span>
             </label>
           ))}
         </div>

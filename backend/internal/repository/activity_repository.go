@@ -55,7 +55,7 @@ func (r *activityRepository) GetUserActivities(ctx context.Context, userID uuid.
 	// Get paginated activities with attraction info
 	err := query.
 		Preload("Attraction").
-		Preload("Attraction.Category").
+		Preload("Attraction.Categories").
 		Order("created_at DESC").
 		Limit(limit).
 		Offset(offset).
@@ -114,7 +114,7 @@ func (r *activityRepository) GetPopularAttractions(ctx context.Context, city *st
 
 	query := r.db.WithContext(ctx).
 		Model(&models.Attraction{}).
-		Preload("Category")
+		Preload("Categories")
 
 	if city != nil && *city != "" {
 		query = query.Where("city::text ILIKE ?", "%"+*city+"%")
@@ -134,7 +134,7 @@ func (r *activityRepository) GetTrendingAttractions(ctx context.Context, city *s
 
 	query := r.db.WithContext(ctx).
 		Model(&models.Attraction{}).
-		Preload("Category")
+		Preload("Categories")
 
 	if city != nil && *city != "" {
 		query = query.Where("city::text ILIKE ?", "%"+*city+"%")

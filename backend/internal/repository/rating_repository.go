@@ -110,7 +110,7 @@ func (r *ratingRepository) GetByUser(ctx context.Context, userID uuid.UUID) ([]*
 	var ratings []*models.Rating
 	err := r.db.WithContext(ctx).
 		Preload("Attraction").
-		Preload("Attraction.Category").
+		Preload("Attraction.Categories").
 		Where("user_id = ?", userID).
 		Order("created_at DESC").
 		Find(&ratings).Error

@@ -10,12 +10,29 @@ const TabsContext = createContext<TabsContextType | undefined>(undefined);
 
 interface TabsProps {
   defaultTab: string;
+  activeTab?: string;
+  onTabChange?: (id: string) => void;
   children: ReactNode;
   className?: string;
 }
 
-export const Tabs = ({ defaultTab, children, className }: TabsProps) => {
-  const [activeTab, setActiveTab] = useState(defaultTab);
+export const Tabs = ({
+  defaultTab,
+  activeTab: controlledActiveTab,
+  onTabChange,
+  children,
+  className,
+}: TabsProps) => {
+  const [internalActiveTab, setInternalActiveTab] = useState(defaultTab);
+  const activeTab = controlledActiveTab ?? internalActiveTab;
+
+  const setActiveTab = (id: string) => {
+    if (onTabChange) {
+      onTabChange(id);
+      return;
+    }
+    setInternalActiveTab(id);
+  };
 
   return (
     <TabsContext.Provider value={{ activeTab, setActiveTab }}>

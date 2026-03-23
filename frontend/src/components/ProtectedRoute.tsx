@@ -4,10 +4,14 @@ import { Spinner } from "./ui";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  allowedRoles?: Array<"user" | "manager" | "admin">;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  allowedRoles,
+}) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -20,6 +24,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (
+    allowedRoles &&
+    allowedRoles.length > 0 &&
+    (!user?.role || !allowedRoles.includes(user.role))
+  ) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

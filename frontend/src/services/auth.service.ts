@@ -4,38 +4,56 @@ import { LoginData, RegisterData, AuthResponse, User } from "../types/auth";
 class AuthService {
   // Login user
   async login(data: LoginData): Promise<AuthResponse> {
-    const response = await api.post<{ message: string; token: string }>("/auth/sign-in", data);
-    if (response.data.token) {
+    const response = await api.post<AuthResponse>("/auth/sign-in", data);
+    if (response.data.token && response.data.user) {
       this.setToken(response.data.token);
-      
-      // Create user object from login data (since backend doesn't return user)
-      // Generate a unique ID based on email and timestamp
-      const user: User = {
-        id: btoa(data.email).substring(0, 16), // Base64 encode email for a pseudo-ID
-        email: data.email,
-        name: data.email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, l => l.toUpperCase()), // Format name nicely
-      };
-      this.setUser(user);
-      
-      console.log("Login successful, user stored:", user);
-      console.log("Token stored:", response.data.token.substring(0, 20) + "...");
-      
-      return {
-        message: response.data.message,
-        token: response.data.token,
-        user: user,
-      };
+      this.setUser(response.data.user);
+      return response.data;
     }
+
     throw new Error("Invalid response from server");
   }
 
   // Register new user
   async register(data: RegisterData): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>("/auth/sign-up", data);
-    if (response.data.token) {
+    if (response.data.token && response.data.user) {
       this.setToken(response.data.token);
       this.setUser(response.data.user);
     }
+    return response.data;
+  }
+
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>("/auth/verify-email", {
+      token,
+    });
+    return response.data;
+  }
+
+  async resendVerification(email: string): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>(
+      "/auth/resend-verification",
+      { email },
+    );
+    return response.data;
+  }
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>("/auth/forgot-password", {
+      email,
+    });
+    return response.data;
+  }
+
+  async resetPassword(
+    token: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>("/auth/reset-password", {
+      token,
+      new_password: newPassword,
+    });
     return response.data;
   }
 

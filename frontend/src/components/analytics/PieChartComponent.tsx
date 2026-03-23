@@ -45,7 +45,6 @@ const PieChartComponent = ({
     }
     return null;
   };
-  console.log("pie", dataKey, nameKey, data);
   return (
     <ResponsiveContainer width="100%" height={height}>
       <RechartsPieChart>
@@ -54,10 +53,7 @@ const PieChartComponent = ({
           cx="50%"
           cy="50%"
           labelLine={false}
-          label={({ name, percent }) =>
-            `${name} (${(percent * 100).toFixed(0)}%)`
-          }
-          outerRadius={80}
+          outerRadius={100}
           fill="#8884d8"
           dataKey={dataKey}
           nameKey={nameKey}
@@ -70,7 +66,12 @@ const PieChartComponent = ({
           ))}
         </Pie>
         <Tooltip content={<CustomTooltip />} />
-        <Legend wrapperStyle={{ fontSize: "12px" }} />
+        <Legend
+          wrapperStyle={{ fontSize: "14px" }}
+          layout="vertical"
+          align="right"
+          verticalAlign="middle"
+        />
       </RechartsPieChart>
     </ResponsiveContainer>
   );

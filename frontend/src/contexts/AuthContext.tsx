@@ -82,7 +82,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       const response = await authService.register(data);
-      setUser(response.user);
+      if (response.token && response.user) {
+        setUser(response.user);
+      } else {
+        // Email verification flow: user is not logged in right after sign-up.
+        setUser(null);
+      }
     } catch (err: any) {
       const errorMessage = err.message || "Registration failed";
       setError(errorMessage);

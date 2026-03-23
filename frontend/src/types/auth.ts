@@ -2,6 +2,8 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  role?: "user" | "manager" | "admin";
+  email_verified?: boolean;
 }
 
 export interface LoginData {
@@ -17,8 +19,8 @@ export interface RegisterData {
 
 export interface AuthResponse {
   message: string;
-  token: string;
-  user: User;
+  token?: string;
+  user?: User;
 }
 
 export interface AuthError {

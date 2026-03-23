@@ -7,6 +7,7 @@ export interface Category {
   name_en: string;
   name_ru: string;
   icon: string;
+  attraction_count?: number;
   created_at: string;
 }
 

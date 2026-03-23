@@ -6,6 +6,16 @@ import {
   AttractionDetailResponse,
 } from "../types/attraction.types";
 
+export interface CityWithCount {
+  city: string;
+  count: number;
+}
+
+export interface CitiesResponse {
+  cities: CityWithCount[];
+  count: number;
+}
+
 class AttractionService {
   // Get all attractions with filters
   async getAll(filters?: AttractionFilters): Promise<AttractionListResponse> {
@@ -83,6 +93,37 @@ class AttractionService {
   // Increment view count
   async incrementView(id: number): Promise<void> {
     await api.post(`/attractions/${id}/view`);
+  }
+
+  // Get cities with attraction counts
+  async getCities(limit = 10): Promise<CityWithCount[]> {
+    const params = new URLSearchParams();
+    params.append("limit", limit.toString());
+
+    const response = await api.get<CitiesResponse>(
+      `/attractions/cities?${params.toString()}`,
+    );
+    return response.data.cities;
+  }
+
+  // Update attraction content (manager/admin)
+  async updateAttraction(
+    id: number,
+    payload: any,
+  ): Promise<{ attraction?: any }> {
+    const response = await api.put(`/attractions/${id}`, payload);
+    return response.data;
+  }
+
+  // Create attraction (manager/admin)
+  async createAttraction(payload: any): Promise<{ attraction?: any }> {
+    const response = await api.post("/attractions", payload);
+    return response.data;
+  }
+
+  // Delete attraction (manager/admin)
+  async deleteAttraction(id: number): Promise<void> {
+    await api.delete(`/attractions/${id}`);
   }
 }
 

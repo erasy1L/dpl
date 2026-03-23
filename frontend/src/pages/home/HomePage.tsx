@@ -9,7 +9,9 @@ import AttractionCard from "../../components/attractions/AttractionCard";
 import CityCard from "../../components/CityCard";
 import { Button, Badge, Skeleton } from "../../components/ui";
 import { Attraction, Category } from "../../types/attraction.types";
-import attractionService from "../../services/attraction.service";
+import attractionService, {
+  CityWithCount,
+} from "../../services/attraction.service";
 import categoryService from "../../services/category.service";
 
 const HomePage = () => {
@@ -18,10 +20,10 @@ const HomePage = () => {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [trendingAttractions, setTrendingAttractions] = useState<Attraction[]>(
-    []
+    [],
   );
   const [topRatedAttractions, setTopRatedAttractions] = useState<Attraction[]>(
-    []
+    [],
   );
   const [personalizedAttractions, setPersonalizedAttractions] = useState<
     Attraction[]
@@ -31,6 +33,9 @@ const HomePage = () => {
   const [loadingTrending, setLoadingTrending] = useState(true);
   const [loadingTopRated, setLoadingTopRated] = useState(true);
   const [loadingPersonalized, setLoadingPersonalized] = useState(true);
+  const [loadingCities, setLoadingCities] = useState(true);
+
+  const [cities, setCities] = useState<CityWithCount[]>([]);
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -38,6 +43,7 @@ const HomePage = () => {
     loadCategories();
     loadTrending();
     loadTopRated();
+    loadCities();
     if (isAuthenticated) {
       loadPersonalized();
     } else {
@@ -72,8 +78,8 @@ const HomePage = () => {
       const response = await attractionService.getAll({ limit: 6, offset: 0 });
       const sorted = [...response.attractions].sort(
         (a, b) =>
-          (b.average_rating || b.popularity / 2) -
-          (a.average_rating || a.popularity / 2)
+          (b.average_rating ? b.average_rating / 2 : 0) -
+          (a.average_rating ? a.average_rating / 2 : 0),
       );
       setTopRatedAttractions(sorted.slice(0, 6));
     } catch (error) {
@@ -96,6 +102,17 @@ const HomePage = () => {
     }
   };
 
+  const loadCities = async () => {
+    try {
+      const data = await attractionService.getCities(3);
+      setCities(data);
+    } catch (error) {
+      console.error("Failed to load cities:", error);
+    } finally {
+      setLoadingCities(false);
+    }
+  };
+
   const handleSearch = () => {
     if (searchQuery.trim()) {
       navigate(`/attractions?search=${encodeURIComponent(searchQuery.trim())}`);
@@ -103,29 +120,20 @@ const HomePage = () => {
   };
 
   const handleCategoryClick = (categoryId: number) => {
-    navigate(`/attractions?category=${categoryId}`);
+    navigate(`/attractions?category=${categoryId}`, {
+      preventScrollReset: false,
+    });
   };
 
-  const cityData = [
-    {
-      name: "Almaty",
-      imageUrl:
-        "https://images.pexels.com/photos/27706770/pexels-photo-27706770.jpeg",
-      attractionCount: 45,
-    },
-    {
-      name: "Astana",
-      imageUrl:
-        "https://images.pexels.com/photos/30083127/pexels-photo-30083127.jpeg",
-      attractionCount: 32,
-    },
-    {
-      name: "Shymkent",
-      imageUrl:
-        "https://images.pexels.com/photos/27706697/pexels-photo-27706697.jpeg",
-      attractionCount: 18,
-    },
-  ];
+  // City images mapping
+  const cityImages: Record<string, string> = {
+    Almaty:
+      "https://images.pexels.com/photos/27706770/pexels-photo-27706770.jpeg",
+    Astana:
+      "https://images.pexels.com/photos/30083127/pexels-photo-30083127.jpeg",
+    Shymkent:
+      "https://images.pexels.com/photos/27706697/pexels-photo-27706697.jpeg",
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -179,7 +187,7 @@ const HomePage = () => {
                   className="bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 cursor-pointer transition-colors px-4 py-2"
                   onClick={() => handleCategoryClick(category.id)}
                 >
-                  {category.name}
+                  {category.name_en}
                 </Badge>
               ))}
           </div>
@@ -418,16 +426,32 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {cityData.map((city) => (
-              <CityCard
-                key={city.name}
-                name={city.name}
-                imageUrl={city.imageUrl}
-                attractionCount={city.attractionCount}
-              />
-            ))}
-          </div>
+          {loadingCities ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-lg shadow-card overflow-hidden h-64"
+                >
+                  <Skeleton variant="rectangular" height={256} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {cities.map((city) => (
+                <CityCard
+                  key={city.city}
+                  name={city.city}
+                  imageUrl={
+                    cityImages[city.city] ||
+                    "https://images.unsplash.com/photo-1449824913935-59a10b8d2000"
+                  }
+                  attractionCount={city.count}
+                />
+              ))}
+            </div>
+          )}
         </Container>
       </section>
 

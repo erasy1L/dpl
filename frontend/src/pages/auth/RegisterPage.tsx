@@ -105,8 +105,8 @@ const RegisterPage = () => {
 
     try {
       await register({ name, email, password });
-      toast.success("Account created successfully!");
-      navigate("/attractions");
+      toast.success("Account created! Please verify your email before login.");
+      navigate("/login");
     } catch (err: any) {
       toast.error(err.message || "Registration failed. Please try again.");
     }

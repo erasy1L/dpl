@@ -118,10 +118,11 @@ type CityData struct {
 
 // AttractionAnalytics represents attraction analytics data
 type AttractionAnalytics struct {
-	ID     int     `json:"id"`
-	Name   string  `json:"name"`
-	City   string  `json:"city"`
-	Views  int     `json:"views"`
-	Rating float64 `json:"rating"`
-	Trend  float64 `json:"trend"`
+	ID          int     `json:"id"`
+	Name        string  `json:"name"`
+	City        string  `json:"city"`
+	Views       int     `json:"views"`
+	Rating      float64 `json:"rating"`
+	ReviewCount int     `json:"review_count"`
+	Trend       float64 `json:"trend"`
 }

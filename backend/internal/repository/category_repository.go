@@ -8,13 +8,20 @@ import (
 	"gorm.io/gorm"
 )
 
+type CategoryWithCount struct {
+	models.Category
+	AttractionCount int `json:"attraction_count"`
+}
+
 type CategoryRepository interface {
 	Create(ctx context.Context, category *models.Category) error
 	GetByID(ctx context.Context, id int) (*models.Category, error)
 	Update(ctx context.Context, category *models.Category) error
 	Delete(ctx context.Context, id int) error
 	List(ctx context.Context, limit, offset int) ([]models.Category, error)
+	ListWithCount(ctx context.Context, limit, offset int) ([]CategoryWithCount, error)
 	Search(ctx context.Context, query string, limit, offset int) ([]models.Category, error)
+	SearchWithCount(ctx context.Context, query string, limit, offset int) ([]CategoryWithCount, error)
 }
 
 type categoryRepository struct {
@@ -76,4 +83,46 @@ func (r *categoryRepository) Search(ctx context.Context, query string, limit, of
 
 	err := dbQuery.Find(&categories).Error
 	return categories, err
+}
+
+func (r *categoryRepository) ListWithCount(ctx context.Context, limit, offset int) ([]CategoryWithCount, error) {
+	var results []CategoryWithCount
+
+	query := r.db.WithContext(ctx).
+		Table("categories").
+		Select("categories.*, COALESCE(COUNT(attraction_categories.attraction_id), 0) as attraction_count").
+		Joins("LEFT JOIN attraction_categories ON categories.id = attraction_categories.category_id").
+		Group("categories.id")
+
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	if offset > 0 {
+		query = query.Offset(offset)
+	}
+
+	err := query.Scan(&results).Error
+	return results, err
+}
+
+func (r *categoryRepository) SearchWithCount(ctx context.Context, query string, limit, offset int) ([]CategoryWithCount, error) {
+	var results []CategoryWithCount
+	searchQuery := "%" + strings.ToLower(query) + "%"
+
+	dbQuery := r.db.WithContext(ctx).
+		Table("categories").
+		Select("categories.*, COALESCE(COUNT(attraction_categories.attraction_id), 0) as attraction_count").
+		Joins("LEFT JOIN attraction_categories ON categories.id = attraction_categories.category_id").
+		Where("LOWER(name_en) LIKE ? OR LOWER(name_ru) LIKE ?", searchQuery, searchQuery).
+		Group("categories.id")
+
+	if limit > 0 {
+		dbQuery = dbQuery.Limit(limit)
+	}
+	if offset > 0 {
+		dbQuery = dbQuery.Offset(offset)
+	}
+
+	err := dbQuery.Scan(&results).Error
+	return results, err
 }

@@ -15,6 +15,7 @@ type AttractionService interface {
 	GetByID(ctx context.Context, id int) (*models.Attraction, error)
 	List(ctx context.Context, filter *repository.AttractionFilter, limit, offset int) ([]models.Attraction, int64, error)
 	Search(ctx context.Context, query string, limit, offset int) ([]models.Attraction, error)
+	GetCitiesWithCount(ctx context.Context, limit int) ([]repository.CityWithCount, error)
 	Create(ctx context.Context, attraction *models.Attraction) error
 	Update(ctx context.Context, attraction *models.Attraction) error
 	Delete(ctx context.Context, id int) error
@@ -68,4 +69,8 @@ func (s *attractionService) Delete(ctx context.Context, id int) error {
 	return s.txMgr.WithTransaction(ctx, func(txCtx context.Context) error {
 		return s.attractionRepo.Delete(txCtx, id)
 	})
+}
+
+func (s *attractionService) GetCitiesWithCount(ctx context.Context, limit int) ([]repository.CityWithCount, error) {
+	return s.attractionRepo.GetCitiesWithCount(ctx, limit)
 }

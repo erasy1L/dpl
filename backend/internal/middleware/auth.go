@@ -13,6 +13,7 @@ import (
 type JWTClaims struct {
 	UserID uuid.UUID `json:"user_id"`
 	Email  string    `json:"email"`
+	Role   string    `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -57,6 +58,7 @@ func AuthMiddleware() fiber.Handler {
 			// Add user info to context
 			c.Locals("user_id", claims.UserID)
 			c.Locals("user_email", claims.Email)
+			c.Locals("user_role", claims.Role)
 			return c.Next()
 		}
 
@@ -76,4 +78,10 @@ func GetUserID(c *fiber.Ctx) (uuid.UUID, bool) {
 func GetUserEmail(c *fiber.Ctx) (string, bool) {
 	email, ok := c.Locals("user_email").(string)
 	return email, ok
+}
+
+// GetUserRole retrieves the user role from the context.
+func GetUserRole(c *fiber.Ctx) (string, bool) {
+	role, ok := c.Locals("user_role").(string)
+	return role, ok
 }

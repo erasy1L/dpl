@@ -12,11 +12,12 @@ import (
 type JWTClaims struct {
 	UserID uuid.UUID `json:"user_id"`
 	Email  string    `json:"email"`
+	Role   string    `json:"role"`
 	jwt.RegisteredClaims
 }
 
 // GenerateJWT generates a new JWT token for a user
-func GenerateJWT(userID uuid.UUID, email string) (string, error) {
+func GenerateJWT(userID uuid.UUID, email string, role string) (string, error) {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
 		secret = "default-secret-key-change-in-production"
@@ -35,6 +36,7 @@ func GenerateJWT(userID uuid.UUID, email string) (string, error) {
 	claims := JWTClaims{
 		UserID: userID,
 		Email:  email,
+		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

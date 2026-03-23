@@ -31,17 +31,23 @@ const ExplorePage = () => {
   const isInitialMount = useRef(true);
 
   // Parse filters from URL
-  const [filters, setFilters] = useState<Filters>(() => ({
-    search: searchParams.get("search") || undefined,
-    city: searchParams.get("city") || undefined,
-    min_rating: searchParams.get("minRating")
-      ? parseInt(searchParams.get("minRating")!)
-      : undefined,
-    limit: ITEMS_PER_PAGE,
-    offset: searchParams.get("page")
-      ? (parseInt(searchParams.get("page")!) - 1) * ITEMS_PER_PAGE
-      : 0,
-  }));
+  const [filters, setFilters] = useState<Filters>(() => {
+    const categoryParam = searchParams.get("category");
+    const categoryIds = categoryParam ? [parseInt(categoryParam)] : undefined;
+
+    return {
+      search: searchParams.get("search") || undefined,
+      city: searchParams.get("city") || undefined,
+      category_ids: categoryIds,
+      min_rating: searchParams.get("minRating")
+        ? parseInt(searchParams.get("minRating")!)
+        : undefined,
+      limit: ITEMS_PER_PAGE,
+      offset: searchParams.get("page")
+        ? (parseInt(searchParams.get("page")!) - 1) * ITEMS_PER_PAGE
+        : 0,
+    };
+  });
 
   const [sortBy, setSortBy] = useState<SortOption>(
     (searchParams.get("sort") as SortOption) || "popular",
@@ -130,6 +136,9 @@ const ExplorePage = () => {
 
     if (filters.search) params.set("search", filters.search);
     if (filters.city) params.set("city", filters.city);
+    if (filters.category_ids && filters.category_ids.length === 1) {
+      params.set("category", filters.category_ids[0].toString());
+    }
     if (filters.min_rating)
       params.set("minRating", filters.min_rating.toString());
 
@@ -143,6 +152,7 @@ const ExplorePage = () => {
   }, [
     filters.search,
     filters.city,
+    filters.category_ids,
     filters.min_rating,
     filters.offset,
     sortBy,

@@ -135,11 +135,13 @@ func (r *analyticsRepository) GetCategoryDistribution(ctx context.Context) ([]mo
 	var data []models.CategoryData
 
 	err := r.db.WithContext(ctx).
-		Table("attractions").
-		Select("categories.name as category, COUNT(attractions.id) as count").
-		Joins("LEFT JOIN categories ON attractions.category_id = categories.id").
-		Group("categories.name").
+		Table("attraction_categories").
+		Select("COALESCE(NULLIF(categories.name_en, ''), categories.name_ru) as category, COUNT(attraction_categories.attraction_id) as count").
+		Joins("LEFT JOIN categories ON attraction_categories.category_id = categories.id").
+		Group("COALESCE(NULLIF(categories.name_en, ''), categories.name_ru)").
+		Having("COUNT(attraction_categories.attraction_id) > 0").
 		Order("count DESC").
+		Limit(10).
 		Scan(&data).Error
 
 	if err != nil {
@@ -168,12 +170,12 @@ func (r *analyticsRepository) GetCityStatistics(ctx context.Context) ([]models.C
 	err := r.db.WithContext(ctx).
 		Table("attractions").
 		Select(`
-			city,
+			city::jsonb->>'en' as city,
 			COUNT(id) as attractions,
 			COALESCE(SUM(total_views), 0) as total_views,
 			COALESCE(AVG(average_rating), 0) as average_rating
 		`).
-		Group("city").
+		Group("city::jsonb->>'en'").
 		Order("attractions DESC").
 		Scan(&data).Error
 
@@ -188,10 +190,11 @@ func (r *analyticsRepository) GetTopAttractions(ctx context.Context, sortBy stri
 		Table("attractions").
 		Select(`
 			attractions.id,
-			attractions.name_en as name,
-			attractions.city,
+			COALESCE(NULLIF(attractions.name::jsonb->>'en', ''), attractions.name::jsonb->>'ru') as name,
+			COALESCE(NULLIF(attractions.city::jsonb->>'en', ''), attractions.city::jsonb->>'ru') as city,
 			COALESCE(attractions.total_views, 0) as views,
 			COALESCE(attractions.average_rating, 0) as rating,
+			COALESCE(attractions.total_ratings, 0) as review_count,
 			COALESCE(attractions.trending_score, 0) as trend
 		`)
 

@@ -43,7 +43,7 @@ func SetupRoutes(app *fiber.App) {
 	authHandler := handlers.NewAuthHandler(authService)
 	userHandler := handlers.NewUserHandler(userService)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
-	attractionHandler := handlers.NewAttractionHandler(attractionService)
+	attractionHandler := handlers.NewAttractionHandler(attractionService, categoryService)
 	ratingHandler := handlers.NewRatingHandler(ratingService)
 	activityHandler := handlers.NewActivityHandler(activityService)
 	recommendationHandler := handlers.NewRecommendationHandler(recommendationService)
@@ -57,12 +57,18 @@ func SetupRoutes(app *fiber.App) {
 	authGroup.Post("/sign-in", authHandler.SignIn)
 	authGroup.Post("/sign-out", authHandler.SignOut)
 	authGroup.Post("/sign-up", authHandler.SignUp)
+	authGroup.Post("/verify-email", authHandler.VerifyEmail)
+	authGroup.Post("/resend-verification", authHandler.ResendVerification)
+	authGroup.Post("/forgot-password", authHandler.ForgotPassword)
+	authGroup.Post("/reset-password", authHandler.ResetPassword)
 
 	// Auth middleware
 	authMiddleware := middleware.AuthMiddleware()
+	authGroup.Put("/change-password", authMiddleware, authHandler.ChangePassword)
 
 	// User routes (protected)
 	usersGroup := api.Group("/users")
+	usersGroup.Get("", authMiddleware, middleware.RequireRoles("admin"), userHandler.ListUsers)
 	usersGroup.Get("/me", authMiddleware, userHandler.GetMyProfile)
 	usersGroup.Get("/me/preferences", authMiddleware, activityHandler.GetPreferences)
 	usersGroup.Put("/me/preferences", authMiddleware, activityHandler.UpdatePreferences)
@@ -71,18 +77,29 @@ func SetupRoutes(app *fiber.App) {
 	usersGroup.Delete("/me/favorites/:attraction_id", authMiddleware, activityHandler.RemoveFavorite)
 	usersGroup.Get("/me/activity", authMiddleware, activityHandler.GetMyActivity)
 
+	// Admin routes (protected)
+	api.Get("/admin/users", authMiddleware, middleware.RequireRoles("admin"), userHandler.ListUsers)
+	api.Put("/admin/users/:id/role", authMiddleware, middleware.RequireRoles("admin"), userHandler.UpdateUserRole)
+
 	// Category routes
 	api.Get("/category", categoryHandler.ListCategories)
+	api.Post("/category", authMiddleware, middleware.RequireRoles("manager", "admin"), categoryHandler.CreateCategory)
+	api.Put("/category/:id", authMiddleware, middleware.RequireRoles("manager", "admin"), categoryHandler.UpdateCategory)
+	api.Delete("/category/:id", authMiddleware, middleware.RequireRoles("manager", "admin"), categoryHandler.DeleteCategory)
 
 	// Attraction routes
 	attractionsGroup := api.Group("/attractions")
+	attractionsGroup.Get("/cities", attractionHandler.GetCities)
+	attractionsGroup.Get("/popular", activityHandler.GetPopular)
+	attractionsGroup.Get("/trending", activityHandler.GetTrending)
 	attractionsGroup.Get("", attractionHandler.ListAttractions)
 	attractionsGroup.Get("/:id", attractionHandler.GetAttraction)
 	attractionsGroup.Get("/:id/ratings", ratingHandler.GetAttractionRatings)
 	attractionsGroup.Post("/:id/view", activityHandler.TrackView)
 	attractionsGroup.Post("/:id/share", activityHandler.TrackShare)
-	attractionsGroup.Get("/popular", activityHandler.GetPopular)
-	attractionsGroup.Get("/trending", activityHandler.GetTrending)
+	attractionsGroup.Post("", authMiddleware, middleware.RequireRoles("manager", "admin"), attractionHandler.CreateAttraction)
+	attractionsGroup.Put("/:id", authMiddleware, middleware.RequireRoles("manager", "admin"), attractionHandler.UpdateAttraction)
+	attractionsGroup.Delete("/:id", authMiddleware, middleware.RequireRoles("manager", "admin"), attractionHandler.DeleteAttraction)
 
 	// Rating routes (protected)
 	ratingsGroup := api.Group("/ratings")

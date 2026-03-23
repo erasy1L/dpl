@@ -12,6 +12,7 @@ import {
   Star,
   Settings,
   BarChart3,
+  Shield,
 } from "lucide-react";
 import { useState } from "react";
 import { Dropdown, Avatar } from "../ui";
@@ -40,12 +41,17 @@ const Navbar = () => {
     {
       label: "My Ratings",
       icon: <Star className="w-4 h-4" />,
-      onClick: () => navigate("/my-ratings"),
+      onClick: () => navigate("/profile?tab=ratings"),
     },
     {
       label: "Preferences",
       icon: <Settings className="w-4 h-4" />,
-      onClick: () => navigate("/preferences"),
+      onClick: () => navigate("/profile?tab=preferences"),
+    },
+    {
+      label: "Security",
+      icon: <Shield className="w-4 h-4" />,
+      onClick: () => navigate("/profile?tab=security"),
     },
     { divider: true },
     {
@@ -92,6 +98,14 @@ const Navbar = () => {
                   label="Analytics"
                   active={isActive("/analytics")}
                 />
+                {(user?.role === "manager" || user?.role === "admin") && (
+                  <NavLink
+                    to="/admin"
+                    icon={Shield}
+                    label="Admin"
+                    active={isActive("/admin")}
+                  />
+                )}
               </div>
             )}
 
@@ -121,6 +135,11 @@ const Navbar = () => {
                             {user?.name}
                           </p>
                           <p className="text-xs text-gray-500">{user?.email}</p>
+                          {user?.role && (
+                            <p className="text-xs text-primary-600 capitalize">
+                              {user.role}
+                            </p>
+                          )}
                         </div>
                       </button>
                     }
@@ -226,6 +245,14 @@ const Navbar = () => {
                   label="Analytics"
                   onClick={() => setMobileMenuOpen(false)}
                 />
+                {(user?.role === "manager" || user?.role === "admin") && (
+                  <MobileNavLink
+                    to="/admin"
+                    icon={Shield}
+                    label="Admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                  />
+                )}
                 <div className="border-t pt-2 mt-2">
                   <MobileNavLink
                     to="/profile"
@@ -234,15 +261,21 @@ const Navbar = () => {
                     onClick={() => setMobileMenuOpen(false)}
                   />
                   <MobileNavLink
-                    to="/my-ratings"
+                    to="/profile?tab=ratings"
                     icon={Star}
                     label="My Ratings"
                     onClick={() => setMobileMenuOpen(false)}
                   />
                   <MobileNavLink
-                    to="/preferences"
+                    to="/profile?tab=preferences"
                     icon={Settings}
                     label="Preferences"
+                    onClick={() => setMobileMenuOpen(false)}
+                  />
+                  <MobileNavLink
+                    to="/profile?tab=security"
+                    icon={Shield}
+                    label="Security"
                     onClick={() => setMobileMenuOpen(false)}
                   />
                 </div>

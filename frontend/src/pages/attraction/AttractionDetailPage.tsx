@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   Share2,
@@ -20,21 +20,26 @@ import {
   Rating,
   Skeleton,
   EmptyState,
+  Input,
+  Modal,
 } from "../../components/ui";
 import { AttractionCard } from "../../components/attractions";
 import { RatingForm, ReviewList } from "../../components/ratings";
 import Map from "../../components/Map";
-import { Attraction } from "../../types/attraction.types";
+import { Attraction, Category } from "../../types/attraction.types";
 import { Rating as RatingType } from "../../types/rating.types";
 import attractionService from "../../services/attraction.service";
 import ratingService from "../../services/rating.service";
-import { getLocalizedText } from "../../utils/localization";
+import categoryService from "../../services/category.service";
+import { getCurrentLocale, getLocalizedText } from "../../utils/localization";
 import toast from "react-hot-toast";
 
 const AttractionDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const canManage = user?.role === "manager" || user?.role === "admin";
 
   const [attraction, setAttraction] = useState<Attraction | null>(null);
   const [similarAttractions, setSimilarAttractions] = useState<Attraction[]>(
@@ -44,6 +49,27 @@ const AttractionDetailPage = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
+
+  // Manager/Admin: attraction editor
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [adminCategories, setAdminCategories] = useState<Category[]>([]);
+  const [loadingAdminCategories, setLoadingAdminCategories] = useState(false);
+
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editAddress, setEditAddress] = useState("");
+  const [editCountry, setEditCountry] = useState("");
+  const [editLatitude, setEditLatitude] = useState<number | undefined>(
+    undefined,
+  );
+  const [editLongitude, setEditLongitude] = useState<number | undefined>(
+    undefined,
+  );
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
+    [],
+  );
 
   const [loading, setLoading] = useState(true);
   const [loadingSimilar, setLoadingSimilar] = useState(true);
@@ -76,6 +102,113 @@ const AttractionDetailPage = () => {
       setIsFavorite(favorites.includes(attraction.id));
     }
   }, [attraction]);
+
+  const loadAdminCategories = async () => {
+    try {
+      setLoadingAdminCategories(true);
+      const cats = await categoryService.getAll();
+      setAdminCategories(cats);
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+      toast.error("Failed to load categories");
+    } finally {
+      setLoadingAdminCategories(false);
+    }
+  };
+
+  const openEditModal = async () => {
+    if (!attraction) return;
+
+    const locale = getCurrentLocale();
+    setEditName(getLocalizedText(attraction.name, locale));
+    setEditDescription(getLocalizedText(attraction.description, locale));
+    setEditCity(getLocalizedText(attraction.city, locale));
+    setEditAddress(getLocalizedText(attraction.address, locale));
+    setEditCountry(getLocalizedText(attraction.country, locale));
+    setEditLatitude(attraction.latitude);
+    setEditLongitude(attraction.longitude);
+    setSelectedCategoryIds(attraction.categories?.map((c) => c.id) ?? []);
+
+    if (adminCategories.length === 0) {
+      await loadAdminCategories();
+    }
+
+    setEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!attraction) return;
+
+    const locale = getCurrentLocale();
+    if (!editName.trim() || !editCity.trim()) {
+      toast.error("Name and city are required");
+      return;
+    }
+
+    const payload: any = {
+      name: { [locale]: editName },
+      city: { [locale]: editCity },
+      description: editDescription.trim()
+        ? { [locale]: editDescription }
+        : undefined,
+      address: editAddress.trim() ? { [locale]: editAddress } : undefined,
+      country: editCountry.trim() ? { [locale]: editCountry } : undefined,
+      latitude: editLatitude,
+      longitude: editLongitude,
+      category_ids: selectedCategoryIds,
+    };
+
+    // Remove undefined keys so backend doesn't try to overwrite with null values.
+    Object.keys(payload).forEach((k) => {
+      if (payload[k] === undefined) delete payload[k];
+    });
+
+    try {
+      setEditSaving(true);
+      await attractionService.updateAttraction(parseInt(id!), payload);
+      toast.success("Attraction updated");
+      setEditModalOpen(false);
+      await loadAttraction();
+    } catch (error: any) {
+      console.error("Failed to update attraction:", error);
+      toast.error(
+        error?.message || "Failed to update attraction",
+      );
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!attraction) return;
+
+    const ok = confirm(
+      "Are you sure you want to delete this attraction?",
+    );
+    if (!ok) return;
+
+    try {
+      await attractionService.deleteAttraction(attraction.id);
+      toast.success("Attraction deleted");
+      navigate("/attractions");
+    } catch (error: any) {
+      console.error("Failed to delete attraction:", error);
+      toast.error(error?.message || "Failed to delete attraction");
+    }
+  };
+
+  // Open editor if URL contains ?edit=1
+  useEffect(() => {
+    if (!canManage) return;
+    const editFlag = searchParams.get("edit");
+    if (editFlag === "1" && attraction) {
+      openEditModal();
+      const params = new URLSearchParams(searchParams);
+      params.delete("edit");
+      setSearchParams(params, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canManage, attraction?.id]);
 
   const loadAttraction = async () => {
     try {
@@ -267,7 +400,7 @@ const AttractionDetailPage = () => {
         </div>
 
         {/* Main Image */}
-        <div className="w-full aspect-[16/9] max-h-[600px]">
+        <div className="w-full aspect-video max-h-[600px]">
           <img
             src={displayImages[selectedImageIndex]}
             alt={attractionName}
@@ -496,6 +629,27 @@ const AttractionDetailPage = () => {
                 >
                   Get Directions
                 </Button>
+
+                {canManage && (
+                  <>
+                    <Button
+                      variant="outline"
+                      fullWidth
+                      onClick={openEditModal}
+                      isLoading={editSaving}
+                    >
+                      Edit attraction
+                    </Button>
+                    <Button
+                      variant="danger"
+                      fullWidth
+                      onClick={handleDelete}
+                      disabled={editSaving}
+                    >
+                      Delete attraction
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -577,6 +731,145 @@ const AttractionDetailPage = () => {
           </Container>
         </section>
       )}
+
+      {/* Attraction Editor Modal (manager/admin) */}
+      <Modal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        title="Edit attraction"
+        size="lg"
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Name (localized)"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              placeholder="e.g. Kok Tobe"
+              required
+            />
+            <Input
+              label="City (localized)"
+              value={editCity}
+              onChange={(e) => setEditCity(e.target.value)}
+              placeholder="e.g. Almaty"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Description (localized)
+            </label>
+            <textarea
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[100px]"
+              placeholder="Short description..."
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Address (localized)"
+              value={editAddress}
+              onChange={(e) => setEditAddress(e.target.value)}
+              placeholder="Address..."
+            />
+            <Input
+              label="Country (localized)"
+              value={editCountry}
+              onChange={(e) => setEditCountry(e.target.value)}
+              placeholder="Country..."
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Latitude"
+              type="number"
+              step="any"
+              value={editLatitude ?? ""}
+              onChange={(e) =>
+                setEditLatitude(
+                  e.target.value ? parseFloat(e.target.value) : undefined,
+                )
+              }
+              placeholder="e.g. 43.236"
+            />
+            <Input
+              label="Longitude"
+              type="number"
+              step="any"
+              value={editLongitude ?? ""}
+              onChange={(e) =>
+                setEditLongitude(
+                  e.target.value ? parseFloat(e.target.value) : undefined,
+                )
+              }
+              placeholder="e.g. 76.895"
+            />
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-gray-900 mb-2">
+              Categories
+            </h4>
+            {loadingAdminCategories ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} variant="rectangular" height={36} />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-56 overflow-auto pr-1">
+                {adminCategories.map((cat) => {
+                  const checked = selectedCategoryIds.includes(cat.id);
+                  return (
+                    <label
+                      key={cat.id}
+                      className="flex items-center gap-3 p-2 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          const next = e.target.checked
+                            ? [...selectedCategoryIds, cat.id]
+                            : selectedCategoryIds.filter(
+                                (id) => id !== cat.id,
+                              );
+                          setSelectedCategoryIds(next);
+                        }}
+                      />
+                      <span className="text-sm text-gray-900">
+                        {cat.name_en}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setEditModalOpen(false)}
+              disabled={editSaving}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSaveEdit}
+              isLoading={editSaving}
+            >
+              Save changes
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

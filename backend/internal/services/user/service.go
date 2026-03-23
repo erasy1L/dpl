@@ -19,6 +19,7 @@ type UserService interface {
 	Update(ctx context.Context, user *models.User) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	List(ctx context.Context, limit, offset int) ([]models.User, error)
+	Count(ctx context.Context) (int64, error)
 	GetUserProfile(ctx context.Context, userID uuid.UUID) (*models.UserProfileResponse, error)
 }
 
@@ -76,6 +77,10 @@ func (s *userService) List(ctx context.Context, limit, offset int) ([]models.Use
 		users[i].Password = ""
 	}
 	return users, nil
+}
+
+func (s *userService) Count(ctx context.Context) (int64, error) {
+	return s.userRepo.Count(ctx)
 }
 
 func (s *userService) GetUserProfile(ctx context.Context, userID uuid.UUID) (*models.UserProfileResponse, error) {

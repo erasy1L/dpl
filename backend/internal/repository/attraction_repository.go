@@ -14,6 +14,11 @@ type AttractionFilter struct {
 	CategoryIDs []int
 }
 
+type CityWithCount struct {
+	City  string `json:"city"`
+	Count int    `json:"count"`
+}
+
 type AttractionRepository interface {
 	Create(ctx context.Context, attraction *models.Attraction) error
 	GetByID(ctx context.Context, id int) (*models.Attraction, error)
@@ -22,6 +27,7 @@ type AttractionRepository interface {
 	List(ctx context.Context, filter *AttractionFilter, limit, offset int) ([]models.Attraction, int64, error)
 	Search(ctx context.Context, query string, limit, offset int) ([]models.Attraction, error)
 	IncrementViews(ctx context.Context, attractionID int) error
+	GetCitiesWithCount(ctx context.Context, limit int) ([]CityWithCount, error)
 	GetDB() *gorm.DB
 }
 
@@ -145,4 +151,37 @@ func (r *attractionRepository) IncrementViews(ctx context.Context, attractionID 
 	}
 
 	return nil
+}
+
+func (r *attractionRepository) GetCitiesWithCount(ctx context.Context, limit int) ([]CityWithCount, error) {
+	var results []struct {
+		CityEn string `json:"city_en"`
+		Count  int    `json:"count"`
+	}
+
+	query := r.db.WithContext(ctx).
+		Table("attractions").
+		Select("city->>'en' as city_en, COUNT(*) as count").
+		Group("city->>'en'").
+		Order("count DESC")
+
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+
+	err := query.Scan(&results).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert to CityWithCount
+	cities := make([]CityWithCount, len(results))
+	for i, r := range results {
+		cities[i] = CityWithCount{
+			City:  r.CityEn,
+			Count: r.Count,
+		}
+	}
+
+	return cities, nil
 }

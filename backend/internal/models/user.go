@@ -6,14 +6,29 @@ import (
 	"github.com/google/uuid"
 )
 
+// UserRole defines user permissions scope.
+type UserRole string
+
+const (
+	RoleUser    UserRole = "user"
+	RoleManager UserRole = "manager"
+	RoleAdmin   UserRole = "admin"
+)
+
 // User represents a user in the system
 type User struct {
-	ID        uuid.UUID `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	Email     string    `json:"email" gorm:"type:varchar;unique;not null" validate:"required,email"`
-	Name      string    `json:"name" gorm:"type:varchar;not null" validate:"required,min=2,max=100"`
-	Password  string    `json:"-" gorm:"type:varchar;not null"`
-	CreatedAt time.Time `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdatedAt time.Time `json:"updated_at" gorm:"default:CURRENT_TIMESTAMP"`
+	ID                     uuid.UUID  `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	Email                  string     `json:"email" gorm:"type:varchar;unique;not null" validate:"required,email"`
+	Name                   string     `json:"name" gorm:"type:varchar;not null" validate:"required,min=2,max=100"`
+	Role                   UserRole   `json:"role" gorm:"type:varchar(20);not null;default:'user'" validate:"oneof=user manager admin"`
+	EmailVerified          bool       `json:"email_verified" gorm:"not null;default:false"`
+	EmailVerificationToken *string    `json:"-" gorm:"column:email_verification_token"`
+	EmailVerificationSent  *time.Time `json:"-" gorm:"column:email_verification_sent_at"`
+	ResetPasswordToken     *string    `json:"-" gorm:"column:reset_password_token"`
+	ResetPasswordSent      *time.Time `json:"-" gorm:"column:reset_password_sent_at"`
+	Password               string     `json:"-" gorm:"type:varchar;not null"`
+	CreatedAt              time.Time  `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`
+	UpdatedAt              time.Time  `json:"updated_at" gorm:"default:CURRENT_TIMESTAMP"`
 }
 
 // TableName specifies the table name for User model
@@ -36,11 +51,13 @@ type UpdateUserRequest struct {
 
 // UserResponse represents the response body for user data (without sensitive info)
 type UserResponse struct {
-	ID        uuid.UUID `json:"id"`
-	Email     string    `json:"email"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID            uuid.UUID `json:"id"`
+	Email         string    `json:"email"`
+	Name          string    `json:"name"`
+	Role          UserRole  `json:"role"`
+	EmailVerified bool      `json:"email_verified"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 // ToResponse converts User to UserResponse
@@ -49,6 +66,8 @@ func (u *User) ToResponse() UserResponse {
 		ID:        u.ID,
 		Email:     u.Email,
 		Name:      u.Name,
+		Role:      u.Role,
+		EmailVerified: u.EmailVerified,
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
 	}

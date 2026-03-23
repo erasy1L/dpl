@@ -3,13 +3,33 @@ import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/layout/Layout";
-import { LoginPage, RegisterPage } from "./pages/auth";
+import {
+  LoginPage,
+  RegisterPage,
+  ForgotPasswordPage,
+  ResetPasswordPage,
+  VerifyEmailPage,
+} from "./pages/auth";
 import { ExplorePage } from "./pages/explore";
 import { HomePage } from "./pages/home";
 import { AttractionDetailPage } from "./pages/attraction";
 import { RecommendationsPage } from "./pages/recommendations";
 import { AnalyticsDashboardPage } from "./pages/analytics";
 import { ProfilePage } from "./pages/profile";
+import { AdminPage } from "./pages/admin";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+
+// Scroll to top component
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 function App() {
   return (
@@ -17,9 +37,13 @@ function App() {
       <Toaster position="top-right" />
       <AuthProvider>
         <Router>
+          <ScrollToTop />
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
 
             <Route
               path="/"
@@ -76,6 +100,17 @@ function App() {
                 <ProtectedRoute>
                   <Layout>
                     <ProfilePage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={["manager", "admin"]}>
+                  <Layout>
+                    <AdminPage />
                   </Layout>
                 </ProtectedRoute>
               }

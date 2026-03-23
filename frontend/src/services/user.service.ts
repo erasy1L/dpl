@@ -101,6 +101,21 @@ class UserService {
       throw new Error("Failed to get user statistics");
     }
   }
+
+  // Change current user password
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    try {
+      await api.put("/auth/change-password", {
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
+    } catch (error: any) {
+      throw new Error(error?.message || "Failed to change password");
+    }
+  }
 }
 
 export default new UserService();

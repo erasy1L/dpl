@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   MapPin,
   Edit,
@@ -7,6 +8,8 @@ import {
   Eye,
   Heart,
   Filter,
+  Shield,
+  Lock,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import Container from "../../components/layout/Container";
@@ -36,6 +39,7 @@ import { formatDate } from "../../utils/formatters";
 import toast from "react-hot-toast";
 
 const ProfilePage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<RatingType[]>([]);
@@ -52,6 +56,19 @@ const ProfilePage = () => {
   const [saving, setSaving] = useState(false);
 
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [securitySaving, setSecuritySaving] = useState(false);
+
+  const allowedTabs = ["ratings", "favorites", "activity", "preferences", "security"] as const;
+  type ProfileTab = (typeof allowedTabs)[number];
+  const initialTab = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<ProfileTab>(
+    allowedTabs.includes(initialTab as ProfileTab)
+      ? (initialTab as ProfileTab)
+      : "ratings",
+  );
 
   useEffect(() => {
     loadProfile();
@@ -59,6 +76,13 @@ const ProfilePage = () => {
     loadFavorites();
     loadActivity();
   }, []);
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (allowedTabs.includes(tabFromUrl as ProfileTab)) {
+      setActiveTab(tabFromUrl as ProfileTab);
+    }
+  }, [searchParams]);
 
   const loadProfile = async () => {
     try {
@@ -140,6 +164,45 @@ const ProfilePage = () => {
   const filteredRatings = ratingFilter
     ? ratings.filter((r) => r.rating === ratingFilter)
     : ratings;
+
+  const handleTabChange = (tabId: string) => {
+    if (!allowedTabs.includes(tabId as ProfileTab)) return;
+    const next = tabId as ProfileTab;
+    setActiveTab(next);
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      params.set("tab", next);
+      return params;
+    });
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+      toast.error("Please fill all password fields");
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error("New password must be at least 6 characters");
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+
+    try {
+      setSecuritySaving(true);
+      await userService.changePassword(currentPassword, newPassword);
+      toast.success("Password changed successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to change password");
+    } finally {
+      setSecuritySaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -223,12 +286,18 @@ const ProfilePage = () => {
         </div>
 
         {/* Tabs Section */}
-        <Tabs defaultTab="ratings" className="mt-8">
+        <Tabs
+          defaultTab="ratings"
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          className="mt-8"
+        >
           <TabList>
             <Tab id="ratings">My Ratings ({ratings.length})</Tab>
             <Tab id="favorites">Favorites ({favorites.length})</Tab>
             <Tab id="activity">Activity</Tab>
             <Tab id="preferences">Preferences</Tab>
+            <Tab id="security">Security</Tab>
           </TabList>
 
           {/* Tab 1: My Ratings */}
@@ -353,6 +422,54 @@ const ProfilePage = () => {
               <PreferencesCard
                 onUpdate={() => toast.success("Preferences updated!")}
               />
+            </div>
+          </TabPanel>
+
+          {/* Tab 5: Security */}
+          <TabPanel id="security">
+            <div className="max-w-2xl">
+              <div className="bg-white p-6 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-2 mb-6">
+                  <Shield className="w-5 h-5 text-primary-500" />
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Security
+                  </h3>
+                </div>
+
+                <div className="space-y-4">
+                  <Input
+                    label="Current password"
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    leftIcon={<Lock className="w-4 h-4" />}
+                    placeholder="Enter current password"
+                  />
+                  <Input
+                    label="New password"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    leftIcon={<Lock className="w-4 h-4" />}
+                    placeholder="Enter new password"
+                  />
+                  <Input
+                    label="Confirm new password"
+                    type="password"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    leftIcon={<Lock className="w-4 h-4" />}
+                    placeholder="Repeat new password"
+                  />
+                  <Button
+                    variant="primary"
+                    onClick={handleChangePassword}
+                    isLoading={securitySaving}
+                  >
+                    Update Password
+                  </Button>
+                </div>
+              </div>
             </div>
           </TabPanel>
         </Tabs>

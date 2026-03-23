@@ -12,9 +12,13 @@ type UserRepository interface {
 	Create(ctx context.Context, user *models.User) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.User, error)
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
+	GetByEmailVerificationToken(ctx context.Context, token string) (*models.User, error)
+	GetByResetPasswordToken(ctx context.Context, token string) (*models.User, error)
 	Update(ctx context.Context, user *models.User) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	List(ctx context.Context, limit, offset int) ([]models.User, error)
+	Count(ctx context.Context) (int64, error)
+	CountByRole(ctx context.Context, role models.UserRole) (int64, error)
 	GetUserStats(ctx context.Context, userID uuid.UUID) (*models.UserStats, error)
 }
 
@@ -48,6 +52,28 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 	return &user, nil
 }
 
+func (r *userRepository) GetByEmailVerificationToken(ctx context.Context, token string) (*models.User, error) {
+	var user models.User
+	err := r.db.WithContext(ctx).
+		Where("email_verification_token = ?", token).
+		First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *userRepository) GetByResetPasswordToken(ctx context.Context, token string) (*models.User, error) {
+	var user models.User
+	err := r.db.WithContext(ctx).
+		Where("reset_password_token = ?", token).
+		First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (r *userRepository) Update(ctx context.Context, user *models.User) error {
 	return r.db.WithContext(ctx).Save(user).Error
 }
@@ -60,6 +86,22 @@ func (r *userRepository) List(ctx context.Context, limit, offset int) ([]models.
 	var users []models.User
 	err := r.db.WithContext(ctx).Limit(limit).Offset(offset).Find(&users).Error
 	return users, err
+}
+
+func (r *userRepository) Count(ctx context.Context) (int64, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&models.User{}).Count(&count).Error
+	return count, err
+}
+
+func (r *userRepository) CountByRole(ctx context.Context, role models.UserRole) (int64, error) {
+	var count int64
+	err := r.db.WithContext(ctx).
+		Model(&models.User{}).
+		Where("role = ?", role).
+		Count(&count).
+		Error
+	return count, err
 }
 
 func (r *userRepository) GetUserStats(ctx context.Context, userID uuid.UUID) (*models.UserStats, error) {

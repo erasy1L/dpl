@@ -14,7 +14,9 @@ var (
 type CategoryService interface {
 	GetByID(ctx context.Context, id int) (*models.Category, error)
 	List(ctx context.Context, limit, offset int) ([]models.Category, error)
+	ListWithCount(ctx context.Context, limit, offset int) ([]repository.CategoryWithCount, error)
 	Search(ctx context.Context, query string, limit, offset int) ([]models.Category, error)
+	SearchWithCount(ctx context.Context, query string, limit, offset int) ([]repository.CategoryWithCount, error)
 	Create(ctx context.Context, category *models.Category) error
 	Update(ctx context.Context, category *models.Category) error
 	Delete(ctx context.Context, id int) error
@@ -49,6 +51,17 @@ func (s *categoryService) Search(ctx context.Context, query string, limit, offse
 		return s.categoryRepo.List(ctx, limit, offset)
 	}
 	return s.categoryRepo.Search(ctx, query, limit, offset)
+}
+
+func (s *categoryService) ListWithCount(ctx context.Context, limit, offset int) ([]repository.CategoryWithCount, error) {
+	return s.categoryRepo.ListWithCount(ctx, limit, offset)
+}
+
+func (s *categoryService) SearchWithCount(ctx context.Context, query string, limit, offset int) ([]repository.CategoryWithCount, error) {
+	if query == "" {
+		return s.categoryRepo.ListWithCount(ctx, limit, offset)
+	}
+	return s.categoryRepo.SearchWithCount(ctx, query, limit, offset)
 }
 
 func (s *categoryService) Create(ctx context.Context, category *models.Category) error {
