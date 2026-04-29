@@ -1,8 +1,16 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
+// In dev, prefer VITE_API_BASE_URL (browser → API over CORS) to avoid Vite’s Node
+// http-proxy to localhost:8080, which on some Windows setups returns ECONNRESET
+// even when curl to the same URL works.
+const devApiOrigin = import.meta.env.VITE_API_BASE_URL as string | undefined;
+const baseURL = devApiOrigin
+  ? `${devApiOrigin.replace(/\/$/, "")}/api/v1`
+  : "/api/v1";
+
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: "/api/v1",
+  baseURL,
   headers: {
     "Content-Type": "application/json",
   },

@@ -214,35 +214,62 @@ func (r *analyticsRepository) GetTopAttractions(ctx context.Context, sortBy stri
 	return data, err
 }
 
-// GetRatingDistribution - get distribution of ratings
+// GetRatingDistribution aggregates star counts for the dashboard histogram.
+// Primary source is the ratings table (in-app votes). If there are no rows yet,
+// it falls back to summing attractions.review_rating_count (JSONB buckets 1–5),
+// which matches seeded/imported aggregates when individual rating rows were not imported.
 func (r *analyticsRepository) GetRatingDistribution(ctx context.Context) (map[int]int, error) {
-	distribution := make(map[int]int)
+	distribution := map[int]int{1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
 
-	var results []struct {
+	var rows []struct {
 		Rating int
 		Count  int
 	}
-
 	err := r.db.WithContext(ctx).
 		Model(&models.Rating{}).
-		Select("rating, COUNT(*) as count").
+		Select("rating, COUNT(*) AS count").
 		Group("rating").
 		Order("rating DESC").
-		Scan(&results).Error
-
+		Scan(&rows).Error
 	if err != nil {
 		return nil, err
 	}
 
-	// Initialize all ratings (1-5) with 0
-	for i := 1; i <= 5; i++ {
-		distribution[i] = 0
+	userTotal := 0
+	for _, row := range rows {
+		if row.Rating >= 1 && row.Rating <= 5 {
+			distribution[row.Rating] = row.Count
+			userTotal += row.Count
+		}
 	}
 
-	// Fill in actual counts
-	for _, result := range results {
-		distribution[result.Rating] = result.Count
+	if userTotal > 0 {
+		return distribution, nil
 	}
 
+	// Fallback: histogram stored per attraction (import / external aggregates)
+	var sums struct {
+		R1 int `gorm:"column:r1"`
+		R2 int `gorm:"column:r2"`
+		R3 int `gorm:"column:r3"`
+		R4 int `gorm:"column:r4"`
+		R5 int `gorm:"column:r5"`
+	}
+	err = r.db.WithContext(ctx).Raw(`
+		SELECT
+			COALESCE(SUM((review_rating_count->>'1')::bigint), 0)::int AS r1,
+			COALESCE(SUM((review_rating_count->>'2')::bigint), 0)::int AS r2,
+			COALESCE(SUM((review_rating_count->>'3')::bigint), 0)::int AS r3,
+			COALESCE(SUM((review_rating_count->>'4')::bigint), 0)::int AS r4,
+			COALESCE(SUM((review_rating_count->>'5')::bigint), 0)::int AS r5
+		FROM attractions
+		WHERE review_rating_count IS NOT NULL
+	`).Scan(&sums).Error
+	if err != nil {
+		return distribution, nil
+	}
+
+	distribution[1], distribution[2] = sums.R1, sums.R2
+	distribution[3], distribution[4], distribution[5] = sums.R3, sums.R4, sums.R5
 	return distribution, nil
 }

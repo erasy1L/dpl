@@ -19,6 +19,39 @@ func NewRecommendationHandler(recommendationService recommendation.Service) *Rec
 	}
 }
 
+// GetRecommendations - GET /api/v1/recommendations — main attraction feed for the logged-in user
+func (h *RecommendationHandler) GetRecommendations(c *fiber.Ctx) error {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	limit, _ := strconv.Atoi(c.Query("limit", "24"))
+	if limit <= 0 || limit > 50 {
+		limit = 24
+	}
+
+	city := c.Query("city")
+	var cityPtr *string
+	if city != "" {
+		cityPtr = &city
+	}
+
+	attractions, reason, err := h.recommendationService.GetUnified(c.Context(), userID, cityPtr, limit)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch recommendations",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"recommendations": attractions,
+		"reason":          reason,
+	})
+}
+
 // GetSimilar - GET /api/v1/recommendations/similar/:id
 func (h *RecommendationHandler) GetSimilar(c *fiber.Ctx) error {
 	// Get attraction ID from URL

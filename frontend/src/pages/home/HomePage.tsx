@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Flame, Star, Sparkles, ArrowRight } from "lucide-react";
+import { Flame, Star, Sparkles, ArrowRight, Briefcase, MapPin } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import Container from "../../components/layout/Container";
 import { AttractionSearch } from "../../components/attractions";
@@ -13,6 +13,17 @@ import attractionService, {
   CityWithCount,
 } from "../../services/attraction.service";
 import categoryService from "../../services/category.service";
+import tourService from "../../services/tour.service";
+import recommendationService from "../../services/recommendation.service";
+import { Tour, TourDifficulty } from "../../types/tour.types";
+import { getLocalizedText } from "../../utils/localization";
+
+const tourDifficultyLabel: Record<TourDifficulty, string> = {
+  easy: "Easy",
+  moderate: "Moderate",
+  hard: "Hard",
+  extreme: "Extreme",
+};
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -36,6 +47,8 @@ const HomePage = () => {
   const [loadingCities, setLoadingCities] = useState(true);
 
   const [cities, setCities] = useState<CityWithCount[]>([]);
+  const [featuredTours, setFeaturedTours] = useState<Tour[]>([]);
+  const [loadingTours, setLoadingTours] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -44,6 +57,7 @@ const HomePage = () => {
     loadTrending();
     loadTopRated();
     loadCities();
+    loadFeaturedTours();
     if (isAuthenticated) {
       loadPersonalized();
     } else {
@@ -91,12 +105,10 @@ const HomePage = () => {
 
   const loadPersonalized = async () => {
     try {
-      // For now, use popular attractions as personalized
-      // This can be replaced with actual recommendation service later
-      const data = await attractionService.getPopular(undefined, 6);
-      setPersonalizedAttractions(data);
+      const { recommendations } = await recommendationService.getRecommendations(6);
+      setPersonalizedAttractions(recommendations);
     } catch (error) {
-      console.error("Failed to load personalized recommendations:", error);
+      console.error("Failed to load recommendations:", error);
     } finally {
       setLoadingPersonalized(false);
     }
@@ -110,6 +122,17 @@ const HomePage = () => {
       console.error("Failed to load cities:", error);
     } finally {
       setLoadingCities(false);
+    }
+  };
+
+  const loadFeaturedTours = async () => {
+    try {
+      const res = await tourService.list({ limit: 6, offset: 0 });
+      setFeaturedTours(res.tours);
+    } catch (error) {
+      console.error("Failed to load tours:", error);
+    } finally {
+      setLoadingTours(false);
     }
   };
 
@@ -352,6 +375,135 @@ const HomePage = () => {
         </Container>
       </section>
 
+      {/* Featured tours — visible to everyone */}
+      <section className="py-12 md:py-16 lg:py-20 bg-white">
+        <Container size="lg">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <Briefcase className="w-8 h-8 text-primary-500" />
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">
+                  Guided tours
+                </h2>
+                <p className="text-gray-600">
+                  Book experiences across Kazakhstan
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/tours")}
+              rightIcon={<ArrowRight className="w-4 h-4" />}
+              className="hidden md:flex"
+            >
+              Browse all tours
+            </Button>
+          </div>
+
+          {loadingTours ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-lg shadow-card overflow-hidden"
+                >
+                  <Skeleton variant="rectangular" height={176} />
+                  <div className="p-4 space-y-3">
+                    <Skeleton variant="text" count={2} />
+                    <Skeleton variant="text" width="60%" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : featuredTours.length === 0 ? (
+            <p className="text-center text-gray-600 py-10">
+              No tours are listed yet. Check back soon.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredTours.map((tour) => {
+                const name = getLocalizedText(tour.name);
+                const startCity = getLocalizedText(tour.start_city);
+                const companyName = tour.company
+                  ? getLocalizedText(tour.company.name)
+                  : "";
+                const image =
+                  tour.images?.[0]?.medium ||
+                  tour.images?.[0]?.original ||
+                  "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=800&q=80";
+                return (
+                  <div
+                    key={tour.id}
+                    role="link"
+                    tabIndex={0}
+                    onClick={() => navigate(`/tours/${tour.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        navigate(`/tours/${tour.id}`);
+                      }
+                    }}
+                    className="bg-white rounded-lg shadow-card overflow-hidden cursor-pointer hover:-translate-y-1 hover:shadow-lg transition-all"
+                  >
+                    <div className="h-44 w-full overflow-hidden">
+                      <img
+                        src={image}
+                        alt={name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="p-4 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="font-semibold text-gray-900 line-clamp-2">
+                          {name}
+                        </h3>
+                        {tour.average_rating > 0 && (
+                          <span className="text-sm font-medium text-amber-600 shrink-0">
+                            ★ {tour.average_rating.toFixed(1)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 line-clamp-1">
+                        {companyName}
+                      </p>
+                      <div className="flex items-center justify-between text-sm text-gray-600 mt-2">
+                        <span>
+                          {tour.duration_days > 0
+                            ? `${tour.duration_days} days`
+                            : `${tour.duration_hours} hours`}
+                        </span>
+                        <span className="font-semibold text-primary-600">
+                          {tour.price.toLocaleString()} {tour.currency}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="inline-flex items-center text-xs text-gray-500">
+                          <MapPin className="w-3 h-3 mr-1" />
+                          {startCity}
+                        </span>
+                        <Badge variant="neutral" size="sm">
+                          {tourDifficultyLabel[tour.difficulty]}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="mt-8 text-center md:hidden">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/tours")}
+              fullWidth
+            >
+              Browse all tours
+            </Button>
+          </div>
+        </Container>
+      </section>
+
       {/* Personalized Recommendations (if logged in) */}
       {isAuthenticated && (
         <section className="py-12 md:py-16 lg:py-20 bg-white">
@@ -364,7 +516,7 @@ const HomePage = () => {
                     Recommended for You
                   </h2>
                   <p className="text-gray-600">
-                    Personalized based on your preferences
+                    Picked for you from one combined feed
                   </p>
                 </div>
               </div>

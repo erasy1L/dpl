@@ -1,0 +1,24 @@
+version: "3"
+
+vars:
+  BACKEND_DIR: backend
+  FRONTEND_DIR: frontend
+
+tasks:
+  back:
+    desc: Запуск API (Go + Fiber) на :8080
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - go run ./cmd
+
+  front:
+    desc: Запуск фронта (Vite) на :5173
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm run dev
+
+  dev:
+    desc: Одновременно бэкенд и фронтенд (два процесса)
+    deps:
+      - back
+      - front

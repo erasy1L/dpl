@@ -13,6 +13,8 @@ import {
   Settings,
   BarChart3,
   Shield,
+  Briefcase,
+  Ticket,
 } from "lucide-react";
 import { useState } from "react";
 import { Dropdown, Avatar } from "../ui";
@@ -53,6 +55,11 @@ const Navbar = () => {
       icon: <Shield className="w-4 h-4" />,
       onClick: () => navigate("/profile?tab=security"),
     },
+    {
+      label: "My bookings",
+      icon: <Ticket className="w-4 h-4" />,
+      onClick: () => navigate("/bookings"),
+    },
     { divider: true },
     {
       label: "Logout",
@@ -76,38 +83,52 @@ const Navbar = () => {
               </div>
             </Link>
 
-            {/* Desktop Navigation */}
-            {isAuthenticated && (
-              <div className="hidden md:flex items-center gap-1">
-                <NavLink to="/" icon={Home} label="Home" active={isActive("/")} />
-                <NavLink
-                  to="/attractions"
-                  icon={Compass}
-                  label="Explore"
-                  active={isActive("/attractions")}
-                />
-                <NavLink
-                  to="/recommendations"
-                  icon={TrendingUp}
-                  label="Recommendations"
-                  active={isActive("/recommendations")}
-                />
-                <NavLink
-                  to="/analytics"
-                  icon={BarChart3}
-                  label="Analytics"
-                  active={isActive("/analytics")}
-                />
-                {(user?.role === "manager" || user?.role === "admin") && (
+            {/* Desktop Navigation — public browse + extra items when signed in */}
+            <div className="hidden md:flex items-center gap-1">
+              <NavLink to="/" icon={Home} label="Home" active={isActive("/")} />
+              <NavLink
+                to="/attractions"
+                icon={Compass}
+                label="Explore"
+                active={location.pathname.startsWith("/attractions")}
+              />
+              <NavLink
+                to="/tours"
+                icon={Briefcase}
+                label="Tours"
+                active={location.pathname.startsWith("/tours")}
+              />
+              <NavLink
+                to="/companies"
+                icon={Briefcase}
+                label="Companies"
+                active={location.pathname.startsWith("/companies")}
+              />
+              {isAuthenticated && (
+                <>
                   <NavLink
-                    to="/admin"
-                    icon={Shield}
-                    label="Admin"
-                    active={isActive("/admin")}
+                    to="/recommendations"
+                    icon={TrendingUp}
+                    label="Recommendations"
+                    active={isActive("/recommendations")}
                   />
-                )}
-              </div>
-            )}
+                  <NavLink
+                    to="/analytics"
+                    icon={BarChart3}
+                    label="Analytics"
+                    active={isActive("/analytics")}
+                  />
+                  {(user?.role === "manager" || user?.role === "admin") && (
+                    <NavLink
+                      to="/admin"
+                      icon={Shield}
+                      label="Admin"
+                      active={isActive("/admin")}
+                    />
+                  )}
+                </>
+              )}
+            </div>
 
             {/* Right Side Actions */}
             <div className="hidden md:flex items-center gap-3">
@@ -234,6 +255,18 @@ const Navbar = () => {
                   onClick={() => setMobileMenuOpen(false)}
                 />
                 <MobileNavLink
+                  to="/tours"
+                  icon={Briefcase}
+                  label="Tours"
+                  onClick={() => setMobileMenuOpen(false)}
+                />
+                <MobileNavLink
+                  to="/companies"
+                  icon={Briefcase}
+                  label="Companies"
+                  onClick={() => setMobileMenuOpen(false)}
+                />
+                <MobileNavLink
                   to="/recommendations"
                   icon={TrendingUp}
                   label="Recommendations"
@@ -267,6 +300,12 @@ const Navbar = () => {
                     onClick={() => setMobileMenuOpen(false)}
                   />
                   <MobileNavLink
+                    to="/bookings"
+                    icon={Ticket}
+                    label="My bookings"
+                    onClick={() => setMobileMenuOpen(false)}
+                  />
+                  <MobileNavLink
                     to="/profile?tab=preferences"
                     icon={Settings}
                     label="Preferences"
@@ -292,20 +331,46 @@ const Navbar = () => {
               </div>
             ) : (
               <div className="p-4 space-y-2">
-                <Link
-                  to="/login"
-                  className="block w-full text-center py-3 border border-primary-500 text-primary-500 rounded-lg font-medium hover:bg-primary-50 transition-colors"
+                <MobileNavLink
+                  to="/"
+                  icon={Home}
+                  label="Home"
                   onClick={() => setMobileMenuOpen(false)}
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="block w-full text-center py-3 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition-colors"
+                />
+                <MobileNavLink
+                  to="/attractions"
+                  icon={Compass}
+                  label="Explore"
                   onClick={() => setMobileMenuOpen(false)}
-                >
-                  Sign Up
-                </Link>
+                />
+                <MobileNavLink
+                  to="/tours"
+                  icon={Briefcase}
+                  label="Tours"
+                  onClick={() => setMobileMenuOpen(false)}
+                />
+                <MobileNavLink
+                  to="/companies"
+                  icon={Briefcase}
+                  label="Companies"
+                  onClick={() => setMobileMenuOpen(false)}
+                />
+                <div className="border-t pt-3 mt-2 space-y-2">
+                  <Link
+                    to="/login"
+                    className="block w-full text-center py-3 border border-primary-500 text-primary-500 rounded-lg font-medium hover:bg-primary-50 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="block w-full text-center py-3 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </div>
               </div>
             )}
           </div>

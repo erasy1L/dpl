@@ -18,6 +18,7 @@ var (
 )
 
 type Service interface {
+	GetUnified(ctx context.Context, userID uuid.UUID, city *string, limit int) ([]*models.Attraction, string, error)
 	GetSimilar(ctx context.Context, attractionID, limit int) ([]*models.Attraction, string, error)
 	GetPersonalized(ctx context.Context, userID uuid.UUID, limit int) ([]*models.Attraction, string, error)
 	GetTrending(ctx context.Context, city *string, limit int) ([]*models.Attraction, string, error)
@@ -37,6 +38,90 @@ func NewService(attractionRepo repository.AttractionRepository, ratingRepo repos
 		ratingRepo:     ratingRepo,
 		activityRepo:   activityRepo,
 	}
+}
+
+func mergeDedupe(lists ...[]*models.Attraction) []*models.Attraction {
+	seen := make(map[int]struct{})
+	var out []*models.Attraction
+	for _, list := range lists {
+		for _, a := range list {
+			if a == nil {
+				continue
+			}
+			if _, ok := seen[a.ID]; ok {
+				continue
+			}
+			seen[a.ID] = struct{}{}
+			out = append(out, a)
+		}
+	}
+	return out
+}
+
+// GetUnified merges collaborative, content-based, and trending signals into one list (deduplicated).
+// With fewer than 3 ratings, uses trending + popular only.
+func (s *service) GetUnified(ctx context.Context, userID uuid.UUID, city *string, limit int) ([]*models.Attraction, string, error) {
+	if limit <= 0 || limit > 50 {
+		limit = 24
+	}
+
+	trendCity := city
+	if trendCity == nil || (trendCity != nil && *trendCity == "") {
+		almaty := "Almaty"
+		trendCity = &almaty
+	}
+
+	userRatings, err := s.ratingRepo.GetByUser(ctx, userID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	if len(userRatings) < 3 {
+		trending, _, err := s.GetTrending(ctx, trendCity, limit)
+		if err != nil {
+			return nil, "", err
+		}
+		popular, _, err := s.getPopularAttractions(ctx, limit)
+		if err != nil {
+			return nil, "", err
+		}
+		merged := mergeDedupe(trending, popular)
+		if len(merged) > limit {
+			merged = merged[:limit]
+		}
+		return merged, "Trending and popular places — rate 3+ attractions to unlock personalized picks", nil
+	}
+
+	chunk := limit / 3
+	if chunk < 4 {
+		chunk = 4
+	}
+	if chunk > limit {
+		chunk = limit
+	}
+
+	cf, _, err := s.GetCollaborativeFiltering(ctx, userID, chunk)
+	if err != nil {
+		return nil, "", err
+	}
+	cb, _, err := s.GetContentBased(ctx, userID, chunk)
+	if err != nil {
+		return nil, "", err
+	}
+	tr, _, err := s.GetTrending(ctx, trendCity, chunk)
+	if err != nil {
+		return nil, "", err
+	}
+
+	merged := mergeDedupe(cf, cb, tr)
+	if len(merged) < limit {
+		popular, _, _ := s.getPopularAttractions(ctx, limit)
+		merged = mergeDedupe(merged, popular)
+	}
+	if len(merged) > limit {
+		merged = merged[:limit]
+	}
+	return merged, "Based on your ratings, similar travelers, and what’s trending", nil
 }
 
 // GetSimilar - Content-based recommendations: similar attractions

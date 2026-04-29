@@ -8,12 +8,18 @@ import (
 	"backend/internal/services/analytics"
 	"backend/internal/services/attraction"
 	"backend/internal/services/auth"
+	"backend/internal/services/booking"
+	"backend/internal/services/chat"
 	"backend/internal/services/category"
+	"backend/internal/services/company"
 	"backend/internal/services/rating"
 	"backend/internal/services/recommendation"
+	"backend/internal/services/tour"
 	"backend/internal/services/user"
+	"backend/internal/polarapp"
 	"backend/pkg/db/postgres"
 	"backend/pkg/db/redis"
+	"backend/pkg/paypal"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -27,6 +33,10 @@ func SetupRoutes(app *fiber.App) {
 	activityRepo := repository.NewActivityRepository(postgres.DB)
 	prefsRepo := repository.NewUserPreferencesRepository(postgres.DB)
 	analyticsRepo := repository.NewAnalyticsRepository(postgres.DB)
+	companyRepo := repository.NewTourCompanyRepository(postgres.DB)
+	tourRepo := repository.NewTourRepository(postgres.DB)
+	bookingRepo := repository.NewBookingRepository(postgres.DB)
+	chatRepo := repository.NewChatRepository(postgres.DB)
 	txMgr := repository.NewTransactionManager(postgres.DB)
 
 	// Initialize services
@@ -38,6 +48,14 @@ func SetupRoutes(app *fiber.App) {
 	activityService := activity.NewService(activityRepo, prefsRepo, attractionRepo)
 	recommendationService := recommendation.NewService(attractionRepo, ratingRepo, activityRepo)
 	analyticsService := analytics.NewService(analyticsRepo, redis.Client)
+	companyService := company.NewService(companyRepo, txMgr)
+	tourService := tour.NewService(tourRepo, companyRepo, txMgr)
+	payClient := paypal.NewClient(paypal.ConfigFromEnv())
+	polarCfg := polarapp.ConfigFromEnv()
+	polarClient := polarapp.NewClient(polarCfg)
+	bookingService := booking.NewService(bookingRepo, tourRepo, txMgr, payClient, polarClient)
+	polarWebhookHandler := handlers.NewPolarWebhookHandler(bookingService, polarCfg.WebhookSecret)
+	chatService := chat.NewService(chatRepo, postgres.DB)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -48,9 +66,14 @@ func SetupRoutes(app *fiber.App) {
 	activityHandler := handlers.NewActivityHandler(activityService)
 	recommendationHandler := handlers.NewRecommendationHandler(recommendationService)
 	analyticsHandler := handlers.NewAnalyticsHandler(analyticsService)
+	companyHandler := handlers.NewTourCompanyHandler(companyService)
+	tourHandler := handlers.NewTourHandler(tourService)
+	bookingHandler := handlers.NewBookingHandler(bookingService)
+	chatHandler := handlers.NewChatHandler(chatService)
 
 	// API v1 routes
 	api := app.Group("/api/v1")
+	api.Post("/webhooks/polar", polarWebhookHandler.Handle)
 
 	// Auth routes
 	authGroup := api.Group("/auth")
@@ -64,6 +87,7 @@ func SetupRoutes(app *fiber.App) {
 
 	// Auth middleware
 	authMiddleware := middleware.AuthMiddleware()
+	optionalAuth := middleware.OptionalAuthMiddleware()
 	authGroup.Put("/change-password", authMiddleware, authHandler.ChangePassword)
 
 	// User routes (protected)
@@ -108,11 +132,49 @@ func SetupRoutes(app *fiber.App) {
 	ratingsGroup.Put("/:id", authMiddleware, ratingHandler.UpdateRating)
 	ratingsGroup.Delete("/:id", authMiddleware, ratingHandler.DeleteRating)
 
+	// Company routes
+	companiesGroup := api.Group("/companies")
+	companiesGroup.Get("", companyHandler.ListCompanies)
+	companiesGroup.Get("/:id", companyHandler.GetCompany)
+	companiesGroup.Post("", authMiddleware, middleware.RequireRoles("manager", "admin"), companyHandler.CreateCompany)
+	companiesGroup.Put("/:id", authMiddleware, middleware.RequireRoles("manager", "admin"), companyHandler.UpdateCompany)
+	companiesGroup.Delete("/:id", authMiddleware, middleware.RequireRoles("admin"), companyHandler.DeleteCompany)
+
+	// Tour routes
+	toursGroup := api.Group("/tours")
+	toursGroup.Get("", tourHandler.ListTours)
+	toursGroup.Get("/:id", tourHandler.GetTour)
+	toursGroup.Get("/:id/schedules", tourHandler.GetTourSchedules)
+	toursGroup.Post("", authMiddleware, middleware.RequireRoles("manager", "admin"), tourHandler.CreateTour)
+	toursGroup.Put("/:id", authMiddleware, middleware.RequireRoles("manager", "admin"), tourHandler.UpdateTour)
+	toursGroup.Delete("/:id", authMiddleware, middleware.RequireRoles("admin"), tourHandler.DeleteTour)
+
+	// Booking routes
+	bookingsGroup := api.Group("/bookings")
+	bookingsGroup.Post("", authMiddleware, bookingHandler.CreateBooking)
+	bookingsGroup.Get("/my", authMiddleware, bookingHandler.GetMyBookings)
+	bookingsGroup.Post("/paypal/capture", authMiddleware, bookingHandler.CapturePayPal)
+	bookingsGroup.Post("/polar/sync", authMiddleware, bookingHandler.SyncPolarAfterReturn)
+	bookingsGroup.Get("/company/:company_id", authMiddleware, middleware.RequireRoles("manager", "admin"), bookingHandler.GetCompanyBookings)
+	bookingsGroup.Get("/:id", authMiddleware, bookingHandler.GetBooking)
+	bookingsGroup.Post("/:id/paypal/checkout", authMiddleware, bookingHandler.CreatePayPalCheckout)
+	bookingsGroup.Post("/:id/polar/checkout", authMiddleware, bookingHandler.CreatePolarCheckout)
+	bookingsGroup.Put("/:id/cancel", authMiddleware, bookingHandler.CancelBooking)
+
+	// Chat (AI assistant)
+	chatGroup := api.Group("/chat")
+	chatGroup.Post("/message", optionalAuth, chatHandler.SendMessage)
+	chatGroup.Get("/sessions", authMiddleware, chatHandler.ListSessions)
+	chatGroup.Get("/history/:session_id", optionalAuth, chatHandler.GetHistory)
+	chatGroup.Post("/session", optionalAuth, chatHandler.CreateSession)
+	chatGroup.Delete("/session/:session_id", authMiddleware, chatHandler.DeleteSession)
+
 	// Check if attraction is favorited (can also be accessed via /users/me/favorites)
 	api.Get("/favorites/:attraction_id/check", authMiddleware, activityHandler.IsFavorite)
 
 	// Recommendations
 	recommendationsGroup := api.Group("/recommendations")
+	recommendationsGroup.Get("/", authMiddleware, recommendationHandler.GetRecommendations)
 	recommendationsGroup.Get("/similar/:id", recommendationHandler.GetSimilar)
 	recommendationsGroup.Get("/trending", recommendationHandler.GetTrending)
 	recommendationsGroup.Get("/personalized", authMiddleware, recommendationHandler.GetPersonalized)

@@ -203,7 +203,7 @@ func (s *service) GetTopAttractions(ctx context.Context, sortBy string, limit in
 
 // GetRatingDistribution - get rating distribution with caching
 func (s *service) GetRatingDistribution(ctx context.Context) (map[int]int, error) {
-	cacheKey := "analytics:rating_distribution"
+	cacheKey := "analytics:rating_distribution:v2"
 
 	// Try cache first
 	if s.cache != nil {

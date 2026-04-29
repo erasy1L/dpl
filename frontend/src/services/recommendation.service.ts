@@ -1,30 +1,40 @@
 import api from "./api";
 import { Attraction } from "../types/attraction.types";
 
+export type RecommendationsResponse = {
+  recommendations: Attraction[];
+  reason: string;
+};
+
 class RecommendationService {
-  // Get personalized recommendations
-  async getPersonalized(limit = 12): Promise<Attraction[]> {
-    try {
-      const response = await api.get<{ recommendations: Attraction[] }>(
-        `/recommendations/personalized?limit=${limit}`,
-      );
-      return response.data.recommendations;
-    } catch (error) {
-      // Fallback to popular attractions if endpoint doesn't exist
-      const fallback = await api.get(`/attractions?limit=${limit}&offset=0`);
-      return fallback.data.attractions;
+  /** GET /api/v1/recommendations — combined feed for the current user */
+  async getRecommendations(
+    limit = 24,
+    city?: string,
+  ): Promise<RecommendationsResponse> {
+    const params = new URLSearchParams();
+    params.set("limit", String(limit));
+    if (city) {
+      params.set("city", city);
     }
+    const response = await api.get<{
+      recommendations: Attraction[];
+      reason: string;
+    }>(`/recommendations?${params.toString()}`);
+    return {
+      recommendations: response.data.recommendations ?? [],
+      reason: response.data.reason ?? "",
+    };
   }
 
-  // Get similar attractions
+  // Legacy / detail use — still available on the API
   async getSimilar(attractionId: number, limit = 6): Promise<Attraction[]> {
     try {
-      const response = await api.get<{ recommendations: Attraction[] }>(
+      const response = await api.get<{ attractions: Attraction[] }>(
         `/recommendations/similar/${attractionId}?limit=${limit}`,
       );
-      return response.data.recommendations;
+      return response.data.attractions;
     } catch (error) {
-      // Fallback to same category attractions
       const attraction = await api.get(`/attractions/${attractionId}`);
       const categoryId = attraction.data.attraction.categoryId;
       const fallback = await api.get(
@@ -32,41 +42,6 @@ class RecommendationService {
       );
       return fallback.data.attractions.filter(
         (a: Attraction) => a.id !== attractionId,
-      );
-    }
-  }
-
-  // Get collaborative filtering recommendations
-  async getCollaborative(limit = 12): Promise<Attraction[]> {
-    const response = await api.get<{ recommendations: Attraction[] }>(
-      `/recommendations/collaborative?limit=${limit}`,
-    );
-    return response.data.recommendations;
-  }
-
-  // Get content-based recommendations
-  async getContentBased(limit = 12): Promise<Attraction[]> {
-    const response = await api.get<{ recommendations: Attraction[] }>(
-      `/recommendations/content-based?limit=${limit}`,
-    );
-    return response.data.recommendations;
-  }
-
-  // Get trending attractions by city
-  async getTrendingByCity(city: string, limit = 12): Promise<Attraction[]> {
-    try {
-      const response = await api.get<{ attractions: Attraction[] }>(
-        `/recommendations/trending?city=${city}&limit=${limit}`,
-      );
-      return response.data.attractions;
-    } catch (error) {
-      // Fallback to city-filtered attractions
-      const fallback = await api.get(
-        `/attractions?city=${city}&limit=${limit}&offset=0`,
-      );
-      return fallback.data.attractions.sort(
-        (a: Attraction, b: Attraction) =>
-          (b.total_views || 0) - (a.total_views || 0),
       );
     }
   }

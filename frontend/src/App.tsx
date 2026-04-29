@@ -17,8 +17,19 @@ import { RecommendationsPage } from "./pages/recommendations";
 import { AnalyticsDashboardPage } from "./pages/analytics";
 import { ProfilePage } from "./pages/profile";
 import { AdminPage } from "./pages/admin";
+import ToursListPage from "./pages/tours/ToursListPage";
+import TourDetailPage from "./pages/tours/TourDetailPage";
+import CompaniesListPage from "./pages/companies/CompaniesListPage";
+import CompanyDetailPage from "./pages/companies/CompanyDetailPage";
+import BookingFlowPage from "./pages/bookings/BookingFlowPage";
+import PayPalReturnPage from "./pages/bookings/PayPalReturnPage";
+import PolarReturnPage from "./pages/bookings/PolarReturnPage";
+import MyBookingsPage from "./pages/bookings/MyBookingsPage";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { ChatProvider } from "./components/chat/ChatContext";
+import ChatBubble from "./components/chat/ChatBubble";
+import ChatPanel from "./components/chat/ChatPanel";
 
 // Scroll to top component
 function ScrollToTop() {
@@ -37,85 +48,167 @@ function App() {
       <Toaster position="top-right" />
       <AuthProvider>
         <Router>
-          <ScrollToTop />
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <ChatProvider>
+            <ScrollToTop />
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
 
-            <Route
-              path="/"
-              element={
-                <Layout>
-                  <HomePage />
-                </Layout>
-              }
-            />
+              <Route
+                path="/"
+                element={
+                  <Layout>
+                    <HomePage />
+                  </Layout>
+                }
+              />
 
-            <Route
-              path="/attractions"
-              element={
-                <Layout>
-                  <ExplorePage />
-                </Layout>
-              }
-            />
+              <Route
+                path="/attractions"
+                element={
+                  <Layout>
+                    <ExplorePage />
+                  </Layout>
+                }
+              />
 
-            <Route
-              path="/attractions/:id"
-              element={
-                <ProtectedRoute>
+              <Route
+                path="/attractions/:id"
+                element={
                   <Layout showFooter={false}>
                     <AttractionDetailPage />
                   </Layout>
-                </ProtectedRoute>
-              }
-            />
+                }
+              />
 
-            <Route
-              path="/recommendations"
-              element={
-                <ProtectedRoute>
+              <Route
+                path="/recommendations"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <RecommendationsPage />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/tours"
+                element={
                   <Layout>
-                    <RecommendationsPage />
+                    <ToursListPage />
                   </Layout>
-                </ProtectedRoute>
-              }
-            />
+                }
+              />
 
-            <Route
-              path="/analytics"
-              element={
-                <Layout>
-                  <AnalyticsDashboardPage />
-                </Layout>
-              }
-            />
-
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
+              <Route
+                path="/tours/:id"
+                element={
                   <Layout>
-                    <ProfilePage />
+                    <TourDetailPage />
                   </Layout>
-                </ProtectedRoute>
-              }
-            />
+                }
+              />
 
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute allowedRoles={["manager", "admin"]}>
+              <Route
+                path="/companies"
+                element={
                   <Layout>
-                    <AdminPage />
+                    <CompaniesListPage />
                   </Layout>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
+                }
+              />
+
+              <Route
+                path="/companies/:id"
+                element={
+                  <Layout>
+                    <CompanyDetailPage />
+                  </Layout>
+                }
+              />
+
+              <Route
+                path="/bookings/new"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <BookingFlowPage />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/bookings/payment/paypal-return"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <PayPalReturnPage />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/bookings/payment/polar-return"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <PolarReturnPage />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/bookings"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <MyBookingsPage />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/analytics"
+                element={
+                  <Layout>
+                    <AnalyticsDashboardPage />
+                  </Layout>
+                }
+              />
+
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <ProfilePage />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute allowedRoles={["manager", "admin"]}>
+                    <Layout>
+                      <AdminPage />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+            <ChatBubble />
+            <ChatPanel />
+          </ChatProvider>
         </Router>
       </AuthProvider>
     </>

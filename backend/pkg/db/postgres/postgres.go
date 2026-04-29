@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"backend/internal/models"
 	"fmt"
 	"os"
 
@@ -26,6 +27,19 @@ func InitDB() error {
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	// Auto-migrate new domain models
+	if err := DB.AutoMigrate(
+		&models.TourCompany{},
+		&models.Tour{},
+		&models.TourAttraction{},
+		&models.TourSchedule{},
+		&models.Booking{},
+		&models.ChatSession{},
+		&models.ChatMessage{},
+	); err != nil {
+		return fmt.Errorf("failed to run auto-migrations: %w", err)
 	}
 
 	return nil

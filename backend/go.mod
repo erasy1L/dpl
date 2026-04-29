@@ -15,6 +15,9 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/lib/pq v1.10.9 // indirect
+	github.com/polarsource/polar-go v0.16.0 // indirect
+	github.com/spyzhov/ajson v0.8.0 // indirect
+	github.com/standard-webhooks/standard-webhooks/libraries v0.0.0-20260424193505-a2086b6cd44f // indirect
 	gorm.io/driver/mysql v1.5.6 // indirect
 )
 

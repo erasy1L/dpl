@@ -88,7 +88,7 @@ const AnalyticsDashboardPage = () => {
 
   const ratingDistData = Object.entries(ratingDist).map(([stars, count]) => ({
     stars: `${stars} ⭐`,
-    count,
+    count: typeof count === "number" ? count : Number(count),
   }));
 
   const viewsColumns = [
