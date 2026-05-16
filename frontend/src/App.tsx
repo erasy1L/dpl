@@ -22,8 +22,7 @@ import TourDetailPage from "./pages/tours/TourDetailPage";
 import CompaniesListPage from "./pages/companies/CompaniesListPage";
 import CompanyDetailPage from "./pages/companies/CompanyDetailPage";
 import BookingFlowPage from "./pages/bookings/BookingFlowPage";
-import PayPalReturnPage from "./pages/bookings/PayPalReturnPage";
-import PolarReturnPage from "./pages/bookings/PolarReturnPage";
+import PaymentReturnPage from "./pages/bookings/PaymentReturnPage";
 import MyBookingsPage from "./pages/bookings/MyBookingsPage";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -143,22 +142,11 @@ function App() {
               />
 
               <Route
-                path="/bookings/payment/paypal-return"
+                path="/bookings/payment/return"
                 element={
                   <ProtectedRoute>
                     <Layout>
-                      <PayPalReturnPage />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/bookings/payment/polar-return"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <PolarReturnPage />
+                      <PaymentReturnPage />
                     </Layout>
                   </ProtectedRoute>
                 }

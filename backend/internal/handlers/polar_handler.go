@@ -27,7 +27,7 @@ func NewPolarWebhookHandler(bookingSvc booking.Service, webhookSecret string) *P
 func (h *PolarWebhookHandler) Handle(c *fiber.Ctx) error {
 	if h.webhookSecret == "" {
 		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-			"error": "Polar webhook is not configured",
+			"error": "Payment webhook is not configured",
 		})
 	}
 	body := c.Body()
@@ -63,7 +63,7 @@ func (h *PolarWebhookHandler) Handle(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-// CreatePolarCheckout handles POST /api/v1/bookings/:id/polar/checkout
+// CreatePolarCheckout handles POST /api/v1/bookings/:id/checkout (redirect URL for payment).
 func (h *BookingHandler) CreatePolarCheckout(c *fiber.Ctx) error {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
@@ -77,15 +77,15 @@ func (h *BookingHandler) CreatePolarCheckout(c *fiber.Ctx) error {
 	if err != nil {
 		switch {
 		case errors.Is(err, booking.ErrPolarNotConfigured):
-			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": "Polar is not configured"})
+			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": "Online payment is not configured"})
 		case errors.Is(err, booking.ErrBookingNotFound):
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Booking not found"})
 		case errors.Is(err, booking.ErrUnauthorizedBookingGet), errors.Is(err, booking.ErrPolarNotEligible):
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Booking is not eligible for Polar payment"})
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Booking is not eligible for payment"})
 		}
-		// include details so misconfiguration / Polar API errors (token, product, currency) are visible in the client
+		// include details for API errors (credentials, catalog, currency) when debugging from the client
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":   "Failed to start Polar checkout",
+			"error":   "Failed to start checkout",
 			"details": err.Error(),
 		})
 	}
@@ -94,7 +94,7 @@ func (h *BookingHandler) CreatePolarCheckout(c *fiber.Ctx) error {
 	})
 }
 
-// SyncPolarAfterReturn handles POST /api/v1/bookings/polar/sync
+// SyncPolarAfterReturn handles POST /api/v1/bookings/payment/sync
 func (h *BookingHandler) SyncPolarAfterReturn(c *fiber.Ctx) error {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
@@ -110,7 +110,7 @@ func (h *BookingHandler) SyncPolarAfterReturn(c *fiber.Ctx) error {
 	if err != nil {
 		switch {
 		case errors.Is(err, booking.ErrPolarNotConfigured):
-			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": "Polar is not configured"})
+			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": "Online payment is not configured"})
 		case errors.Is(err, booking.ErrBookingNotFound):
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Booking not found"})
 		case errors.Is(err, booking.ErrUnauthorizedBookingGet):

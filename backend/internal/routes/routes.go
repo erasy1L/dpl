@@ -19,7 +19,6 @@ import (
 	"backend/internal/polarapp"
 	"backend/pkg/db/postgres"
 	"backend/pkg/db/redis"
-	"backend/pkg/paypal"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -50,10 +49,9 @@ func SetupRoutes(app *fiber.App) {
 	analyticsService := analytics.NewService(analyticsRepo, redis.Client)
 	companyService := company.NewService(companyRepo, txMgr)
 	tourService := tour.NewService(tourRepo, companyRepo, txMgr)
-	payClient := paypal.NewClient(paypal.ConfigFromEnv())
 	polarCfg := polarapp.ConfigFromEnv()
 	polarClient := polarapp.NewClient(polarCfg)
-	bookingService := booking.NewService(bookingRepo, tourRepo, txMgr, payClient, polarClient)
+	bookingService := booking.NewService(bookingRepo, tourRepo, txMgr, polarClient)
 	polarWebhookHandler := handlers.NewPolarWebhookHandler(bookingService, polarCfg.WebhookSecret)
 	chatService := chat.NewService(chatRepo, postgres.DB)
 
@@ -153,12 +151,10 @@ func SetupRoutes(app *fiber.App) {
 	bookingsGroup := api.Group("/bookings")
 	bookingsGroup.Post("", authMiddleware, bookingHandler.CreateBooking)
 	bookingsGroup.Get("/my", authMiddleware, bookingHandler.GetMyBookings)
-	bookingsGroup.Post("/paypal/capture", authMiddleware, bookingHandler.CapturePayPal)
-	bookingsGroup.Post("/polar/sync", authMiddleware, bookingHandler.SyncPolarAfterReturn)
+	bookingsGroup.Post("/payment/sync", authMiddleware, bookingHandler.SyncPolarAfterReturn)
 	bookingsGroup.Get("/company/:company_id", authMiddleware, middleware.RequireRoles("manager", "admin"), bookingHandler.GetCompanyBookings)
 	bookingsGroup.Get("/:id", authMiddleware, bookingHandler.GetBooking)
-	bookingsGroup.Post("/:id/paypal/checkout", authMiddleware, bookingHandler.CreatePayPalCheckout)
-	bookingsGroup.Post("/:id/polar/checkout", authMiddleware, bookingHandler.CreatePolarCheckout)
+	bookingsGroup.Post("/:id/checkout", authMiddleware, bookingHandler.CreatePolarCheckout)
 	bookingsGroup.Put("/:id/cancel", authMiddleware, bookingHandler.CancelBooking)
 
 	// Chat (AI assistant)

@@ -77,7 +77,7 @@ func (s *service) CreatePolarCheckout(ctx context.Context, userID uuid.UUID, boo
 		return "", err
 	}
 	base := appBaseURL()
-	success := fmt.Sprintf("%s/bookings/payment/polar-return?checkout_id={CHECKOUT_ID}", base)
+	success := fmt.Sprintf("%s/bookings/payment/return?checkout_id={CHECKOUT_ID}", base)
 	ret := fmt.Sprintf("%s/bookings/new?tour=%d", base, booking.TourID)
 	ch, err := s.polar.CreateCheckoutSession(
 		ctx,
@@ -183,7 +183,7 @@ func (s *service) ProcessPolarOrderPaid(ctx context.Context, order *polarco.Orde
 
 func (s *service) applyPolarOrderInTx(txCtx context.Context, booking *models.Booking, order *polarco.Order) error {
 	if booking.PaypalCaptureID != nil {
-		return fmt.Errorf("booking already paid with PayPal")
+		return fmt.Errorf("booking already paid with another method")
 	}
 	if booking.PolarOrderID != nil && *booking.PolarOrderID == order.ID && booking.Status == models.BookingStatusConfirmed {
 		return nil

@@ -34,37 +34,20 @@ class BookingService {
     return res.data.booking;
   }
 
-  async createPayPalCheckout(
+  async startCheckout(
     bookingId: string,
-  ): Promise<{ approval_url: string }> {
-    const res = await api.post<{ approval_url: string }>(
-      `/bookings/${bookingId}/paypal/checkout`,
-    );
-    return res.data;
-  }
-
-  async capturePayPal(
-    paypalOrderId: string,
-  ): Promise<{ message: string; booking: Booking }> {
-    const res = await api.post<{ message: string; booking: Booking }>(
-      `/bookings/paypal/capture`,
-      { paypal_order_id: paypalOrderId },
-    );
-    return res.data;
-  }
-
-  async createPolarCheckout(bookingId: string): Promise<{ checkout_url: string }> {
+  ): Promise<{ checkout_url: string }> {
     const res = await api.post<{ checkout_url: string }>(
-      `/bookings/${bookingId}/polar/checkout`,
+      `/bookings/${bookingId}/checkout`,
     );
     return res.data;
   }
 
-  async syncPolarAfterReturn(
+  async syncPaymentAfterReturn(
     checkoutId: string,
   ): Promise<{ message: string; booking: Booking }> {
     const res = await api.post<{ message: string; booking: Booking }>(
-      `/bookings/polar/sync`,
+      `/bookings/payment/sync`,
       { checkout_id: checkoutId },
     );
     return res.data;
@@ -72,4 +55,3 @@ class BookingService {
 }
 
 export default new BookingService();
-

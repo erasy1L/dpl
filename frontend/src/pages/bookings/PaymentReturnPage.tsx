@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-const PolarReturnPage = () => {
+const PaymentReturnPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -27,10 +27,10 @@ const PolarReturnPage = () => {
 
     (async () => {
       const maxAttempts = 10;
-      let lastError: string = "";
+      let lastError = "";
       for (let i = 0; i < maxAttempts; i++) {
         try {
-          await bookingService.syncPolarAfterReturn(checkoutId);
+          await bookingService.syncPaymentAfterReturn(checkoutId);
           toast.success("Payment confirmed");
           navigate("/bookings", { replace: true });
           return;
@@ -63,8 +63,8 @@ const PolarReturnPage = () => {
         <Container size="md" className="text-center py-16 space-y-4">
           <p className="text-red-700">{errMsg}</p>
           <p className="text-sm text-gray-600">
-            If you were charged, the webhook may still update your booking—check
-            My bookings in a minute.
+            If you were charged, your booking may still update in a few moments—check
+            My bookings.
           </p>
           <Button variant="primary" onClick={() => navigate("/bookings")}>
             My bookings
@@ -78,7 +78,7 @@ const PolarReturnPage = () => {
     return (
       <div className="min-h-[50vh] flex items-center justify-center bg-gray-50">
         <Container size="md" className="text-center py-16">
-          <p className="text-gray-700">Confirming your Polar payment…</p>
+          <p className="text-gray-700">Confirming your payment…</p>
         </Container>
       </div>
     );
@@ -87,4 +87,4 @@ const PolarReturnPage = () => {
   return null;
 };
 
-export default PolarReturnPage;
+export default PaymentReturnPage;

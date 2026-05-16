@@ -4,12 +4,11 @@ import {
   CalendarDays,
   Clock,
   MapPin,
-  DollarSign,
   CheckCircle2,
   XCircle,
 } from "lucide-react";
 import Container from "../../components/layout/Container";
-import { Button, Skeleton, EmptyState, Badge } from "../../components/ui";
+import { Button, Skeleton, EmptyState } from "../../components/ui";
 import bookingService from "../../services/booking.service";
 import { Booking } from "../../types/booking.types";
 import { getLocalizedText } from "../../utils/localization";
@@ -44,6 +43,7 @@ const statusColors: Record<
 const MyBookingsPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [payingBookingId, setPayingBookingId] = useState<string | null>(null);
   const [limit] = useState(20);
   const [offset] = useState(0);
   const navigate = useNavigate();
@@ -76,6 +76,18 @@ const MyBookingsPage = () => {
     } catch (error: any) {
       console.error("Failed to cancel booking:", error);
       toast.error(error?.message || "Failed to cancel booking");
+    }
+  };
+
+  const handlePay = async (id: string) => {
+    try {
+      setPayingBookingId(id);
+      const { checkout_url: checkoutUrl } = await bookingService.startCheckout(id);
+      window.location.href = checkoutUrl;
+    } catch (error: any) {
+      console.error("Failed to start checkout:", error);
+      toast.error(error?.message || "Could not start payment");
+      setPayingBookingId(null);
     }
   };
 
@@ -186,7 +198,6 @@ const MyBookingsPage = () => {
                   <div className="flex flex-col items-end justify-between gap-2">
                     <div className="text-right">
                       <div className="flex items-center justify-end gap-1 text-gray-900">
-                        <DollarSign className="w-4 h-4 text-primary-500" />
                         <span className="font-semibold">
                           {b.total_price.toLocaleString()}{" "}
                           {b.tour ? b.tour.currency : "KZT"}
@@ -205,6 +216,17 @@ const MyBookingsPage = () => {
                       >
                         View tour
                       </Button>
+                      {b.status === "pending" && (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          isLoading={payingBookingId === b.id}
+                          disabled={payingBookingId !== null && payingBookingId !== b.id}
+                          onClick={() => handlePay(b.id)}
+                        >
+                          Pay
+                        </Button>
+                      )}
                       {(b.status === "pending" || b.status === "confirmed") && (
                         <Button
                           variant="danger"

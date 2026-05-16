@@ -5,7 +5,6 @@ import {
   MapPin,
   Clock,
   Users,
-  DollarSign,
   CalendarDays,
   CheckCircle2,
 } from "lucide-react";
@@ -223,7 +222,6 @@ const TourDetailPage = () => {
               <div className="flex items-baseline justify-between mb-3">
                 <div>
                   <div className="flex items-center gap-1 text-gray-900">
-                    <DollarSign className="w-5 h-5 text-primary-500" />
                     <span className="text-2xl font-bold">
                       {tour.price.toLocaleString()} {tour.currency}
                     </span>

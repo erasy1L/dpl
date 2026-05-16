@@ -35,8 +35,7 @@ const BookingFlowPage = () => {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
-  const [redirectingToPaypal, setRedirectingToPaypal] = useState(false);
-  const [redirectingToPolar, setRedirectingToPolar] = useState(false);
+  const [redirectingToPayment, setRedirectingToPayment] = useState(false);
 
   useEffect(() => {
     if (!tourId) {
@@ -155,39 +154,21 @@ const BookingFlowPage = () => {
   const name = getLocalizedText(tour.name);
   const totalPrice = numberOfPeople * tour.price;
 
-  const goToPaypal = async () => {
+  const startCheckout = async () => {
     if (!createdBookingId) return;
     try {
-      setRedirectingToPaypal(true);
-      const { approval_url: approvalUrl } =
-        await bookingService.createPayPalCheckout(createdBookingId);
-      window.location.href = approvalUrl;
-    } catch (error: unknown) {
-      console.error("PayPal checkout failed:", error);
-      const message =
-        error && typeof error === "object" && "message" in error
-          ? String((error as { message: string }).message)
-          : "Could not start PayPal";
-      toast.error(message);
-      setRedirectingToPaypal(false);
-    }
-  };
-
-  const goToPolar = async () => {
-    if (!createdBookingId) return;
-    try {
-      setRedirectingToPolar(true);
+      setRedirectingToPayment(true);
       const { checkout_url: checkoutUrl } =
-        await bookingService.createPolarCheckout(createdBookingId);
+        await bookingService.startCheckout(createdBookingId);
       window.location.href = checkoutUrl;
     } catch (error: unknown) {
-      console.error("Polar checkout failed:", error);
+      console.error("Checkout failed:", error);
       const message =
         error && typeof error === "object" && "message" in error
           ? String((error as { message: string }).message)
-          : "Could not start Polar";
+          : "Could not start payment";
       toast.error(message);
-      setRedirectingToPolar(false);
+      setRedirectingToPayment(false);
     }
   };
 
@@ -204,7 +185,7 @@ const BookingFlowPage = () => {
             {name}
           </h1>
           <p className="text-sm text-gray-600">
-            Choose a date, enter details, then pay with PayPal.
+            Choose a date, enter details, then complete payment securely.
           </p>
         </header>
 
@@ -358,7 +339,7 @@ const BookingFlowPage = () => {
               </section>
             )}
 
-            {/* Step 3: review + PayPal */}
+            {/* Step 3: review + payment */}
             {step === 3 && (
               <section className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
                 <h2 className="text-lg font-semibold text-gray-900 mb-1">
@@ -366,7 +347,7 @@ const BookingFlowPage = () => {
                 </h2>
                 <p className="text-xs text-gray-500 mb-3">
                   {createdBookingId
-                    ? "You will be redirected to PayPal to complete payment. Your booking is confirmed after a successful charge."
+                    ? "You will be redirected to a secure checkout page. Your booking is confirmed after a successful payment."
                     : "Please review the details before continuing."}
                 </p>
                 {selectedSchedule && (
@@ -408,22 +389,13 @@ const BookingFlowPage = () => {
                       Create booking
                     </Button>
                   ) : (
-                    <div className="flex flex-col gap-2 max-w-sm">
+                    <div className="flex flex-col gap-2 max-w-sm w-full">
                       <Button
                         variant="primary"
-                        isLoading={redirectingToPaypal}
-                        onClick={goToPaypal}
-                        disabled={redirectingToPaypal || redirectingToPolar}
+                        isLoading={redirectingToPayment}
+                        onClick={startCheckout}
                       >
-                        Pay with PayPal
-                      </Button>
-                      <Button
-                        variant="outline"
-                        isLoading={redirectingToPolar}
-                        onClick={goToPolar}
-                        disabled={redirectingToPaypal || redirectingToPolar}
-                      >
-                        Pay with Polar
+                        Pay now
                       </Button>
                       <button
                         type="button"
@@ -437,8 +409,8 @@ const BookingFlowPage = () => {
                 </div>
                 {createdBookingId && (
                   <p className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-                    Polar: tour currency must be USD, EUR, or GBP and match your Polar
-                    product. Your places are held until you pay or cancel in My bookings.
+                    Some payment options require the tour currency to be USD, EUR, or GBP. Your spots
+                    are held until you pay or cancel in My bookings.
                   </p>
                 )}
               </section>
@@ -471,8 +443,8 @@ const BookingFlowPage = () => {
                 </div>
               </div>
               <p className="mt-3 text-xs text-gray-500">
-                Pay with PayPal or Polar after creating the booking. Polar needs a
-                catalog product and supported currency (see project .env).
+                After you reserve, you can pay from this page. Availability of payment methods depends
+                on tour currency and your region.
               </p>
             </section>
           </aside>

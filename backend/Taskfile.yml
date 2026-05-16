@@ -1,0 +1,12 @@
+version: "3"
+
+tasks:
+  build:
+    desc: Build the backend
+    cmds:
+      - go build -o ./server ./cmd/main.go
+
+  dev:
+    desc: Run the backend in development mode
+    cmds:
+      - go run ./cmd/main.go
