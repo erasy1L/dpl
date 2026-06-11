@@ -1,10 +1,10 @@
 version: "3"
 
 includes:
-  backend:
+  back:
     taskfile: backend/Taskfile.yml
     dir: backend
 
-  frontend:
+  front:
     taskfile: frontend/Taskfile.yml
     dir: frontend
