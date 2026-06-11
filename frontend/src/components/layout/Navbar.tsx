@@ -72,19 +72,19 @@ const Navbar = () => {
     <>
       <nav className="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 md:h-20">
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 md:gap-3 h-16 md:h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
+            <Link to="/" className="flex items-center gap-2 group shrink-0">
               <Compass className="h-7 w-7 md:h-8 md:w-8 text-primary-500 group-hover:rotate-12 transition-transform duration-300" />
               <div className="flex flex-col">
-                <span className="text-lg md:text-xl font-bold text-gray-900">
+                <span className="text-lg md:text-xl font-bold text-gray-900 whitespace-nowrap">
                   Tour<span className="text-primary-500">KZ</span>
                 </span>
               </div>
             </Link>
 
-            {/* Desktop Navigation — public browse + extra items when signed in */}
-            <div className="hidden md:flex items-center gap-1">
+            {/* Desktop Navigation — icon-only until 2xl; scrolls horizontally if needed */}
+            <div className="hidden md:flex min-w-0 items-center justify-start gap-0.5 lg:gap-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               <NavLink to="/" icon={Home} label="Home" active={isActive("/")} />
               <NavLink
                 to="/attractions"
@@ -109,7 +109,7 @@ const Navbar = () => {
                   <NavLink
                     to="/recommendations"
                     icon={TrendingUp}
-                    label="Recommendations"
+                    label="For You"
                     active={isActive("/recommendations")}
                   />
                   <NavLink
@@ -131,7 +131,7 @@ const Navbar = () => {
             </div>
 
             {/* Right Side Actions */}
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2 xl:gap-3 shrink-0 justify-self-end">
               {isAuthenticated ? (
                 <>
                   {/* Search Button */}
@@ -151,13 +151,13 @@ const Navbar = () => {
                           fallback={user?.name?.charAt(0) || "U"}
                           size="md"
                         />
-                        <div className="hidden lg:block text-left">
-                          <p className="text-sm font-medium text-gray-900">
+                        <div className="hidden 2xl:block text-left max-w-[10rem]">
+                          <p className="text-sm font-medium text-gray-900 truncate">
                             {user?.name}
                           </p>
-                          <p className="text-xs text-gray-500">{user?.email}</p>
+                          <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                           {user?.role && (
-                            <p className="text-xs text-primary-600 capitalize">
+                            <p className="text-xs text-primary-600 capitalize truncate">
                               {user.role}
                             </p>
                           )}
@@ -189,7 +189,7 @@ const Navbar = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-primary-500"
+              className="md:hidden p-2 text-gray-600 hover:text-primary-500 shrink-0 justify-self-end"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
@@ -391,14 +391,16 @@ interface NavLinkProps {
 const NavLink = ({ to, icon: Icon, label, active }: NavLinkProps) => (
   <Link
     to={to}
-    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+    title={label}
+    aria-label={label}
+    className={`flex items-center gap-1.5 2xl:gap-2 px-2 lg:px-2.5 2xl:px-3 py-2 rounded-lg transition-all shrink-0 ${
       active
-        ? "text-primary-600 bg-primary-50 font-medium underline decoration-2 underline-offset-8"
+        ? "text-primary-600 bg-primary-50 font-medium 2xl:underline 2xl:decoration-2 2xl:underline-offset-8"
         : "text-gray-700 hover:text-primary-600 hover:bg-gray-50"
     }`}
   >
-    <Icon className="h-5 w-5" />
-    <span>{label}</span>
+    <Icon className="h-5 w-5 shrink-0" />
+    <span className="hidden 2xl:inline whitespace-nowrap">{label}</span>
   </Link>
 );
 

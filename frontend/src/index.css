@@ -15,11 +15,17 @@
     color: #1f2937;
     background-color: #f9fafb;
     min-height: 100vh;
+    overflow-x: clip;
+  }
+
+  html {
+    overflow-x: clip;
   }
 
   #root {
     width: 100%;
     min-height: 100vh;
+    overflow-x: clip;
   }
 
   h1,

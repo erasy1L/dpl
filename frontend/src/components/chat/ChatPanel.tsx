@@ -76,8 +76,8 @@ export default function ChatPanel() {
       <div
         className={`fixed inset-0 z-[58] md:inset-auto md:bottom-24 md:right-6 md:h-[min(500px,calc(100dvh-7rem))] ${
           wide
-            ? "md:w-[min(640px,calc(100vw-2rem))]"
-            : "md:w-[min(400px,calc(100vw-3rem))]"
+            ? "md:w-[min(640px,calc(100dvw-2rem))]"
+            : "md:w-[min(400px,calc(100dvw-3rem))]"
         }`}
         role="dialog"
         aria-label="TourKZ Assistant chat"
