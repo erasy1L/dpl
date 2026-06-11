@@ -31,10 +31,13 @@ import { Rating as RatingType } from "../../types/rating.types";
 import attractionService from "../../services/attraction.service";
 import ratingService from "../../services/rating.service";
 import categoryService from "../../services/category.service";
-import { getCurrentLocale, getLocalizedText } from "../../utils/localization";
+import { getCurrentLocale, getLocalizedText, getCategoryName } from "../../utils/localization";
 import toast from "react-hot-toast";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 const AttractionDetailPage = () => {
+  useLocale();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
@@ -110,7 +113,7 @@ const AttractionDetailPage = () => {
       setAdminCategories(cats);
     } catch (error) {
       console.error("Failed to load categories:", error);
-      toast.error("Failed to load categories");
+      toast.error(m.toast_load_categories_failed());
     } finally {
       setLoadingAdminCategories(false);
     }
@@ -141,7 +144,7 @@ const AttractionDetailPage = () => {
 
     const locale = getCurrentLocale();
     if (!editName.trim() || !editCity.trim()) {
-      toast.error("Name and city are required");
+      toast.error(m.toast_name_city_required());
       return;
     }
 
@@ -166,13 +169,13 @@ const AttractionDetailPage = () => {
     try {
       setEditSaving(true);
       await attractionService.updateAttraction(parseInt(id!), payload);
-      toast.success("Attraction updated");
+      toast.success(m.toast_attraction_updated());
       setEditModalOpen(false);
       await loadAttraction();
     } catch (error: any) {
       console.error("Failed to update attraction:", error);
       toast.error(
-        error?.message || "Failed to update attraction",
+        error?.message || m.toast_update_attraction_failed(),
       );
     } finally {
       setEditSaving(false);
@@ -182,18 +185,16 @@ const AttractionDetailPage = () => {
   const handleDelete = async () => {
     if (!attraction) return;
 
-    const ok = confirm(
-      "Are you sure you want to delete this attraction?",
-    );
+    const ok = confirm(m.confirm_delete_attraction_detail());
     if (!ok) return;
 
     try {
       await attractionService.deleteAttraction(attraction.id);
-      toast.success("Attraction deleted");
+      toast.success(m.toast_attraction_deleted());
       navigate("/attractions");
     } catch (error: any) {
       console.error("Failed to delete attraction:", error);
-      toast.error(error?.message || "Failed to delete attraction");
+      toast.error(error?.message || m.toast_delete_attraction_failed());
     }
   };
 
@@ -226,7 +227,7 @@ const AttractionDetailPage = () => {
       if (error.status === 404) {
         setNotFound(true);
       } else {
-        toast.error("Failed to load attraction details");
+        toast.error(m.toast_load_attraction_failed());
       }
     } finally {
       setLoading(false);
@@ -277,7 +278,7 @@ const AttractionDetailPage = () => {
           text: attractionDescription,
           url: url,
         });
-        toast.success("Shared successfully!");
+        toast.success(m.toast_shared_success());
       } catch (error) {
         // User cancelled share
       }
@@ -285,9 +286,9 @@ const AttractionDetailPage = () => {
       // Fallback: copy to clipboard
       try {
         await navigator.clipboard.writeText(url);
-        toast.success("Link copied to clipboard!");
+        toast.success(m.toast_link_copied());
       } catch (error) {
-        toast.error("Failed to copy link");
+        toast.error(m.toast_copy_failed());
       }
     }
   };
@@ -302,7 +303,7 @@ const AttractionDetailPage = () => {
 
     localStorage.setItem("favorites", JSON.stringify(newFavorites));
     setIsFavorite(!isFavorite);
-    toast.success(isFavorite ? "Removed from favorites" : "Added to favorites");
+    toast.success(isFavorite ? m.toast_removed_favorites() : m.toast_added_favorites());
   };
 
   if (loading) {
@@ -329,10 +330,10 @@ const AttractionDetailPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <EmptyState
-          title="Attraction Not Found"
-          description="The attraction you're looking for doesn't exist or has been removed."
+          title={m.attraction_not_found_title()}
+          description={m.attraction_not_found_desc()}
           action={{
-            label: "Back to Explore",
+            label: m.back_to_explore(),
             onClick: () => navigate("/attractions"),
           }}
         />
@@ -469,19 +470,19 @@ const AttractionDetailPage = () => {
               <div className="bg-white p-4 rounded-lg border border-gray-200">
                 <div className="flex items-center gap-3 mb-2">
                   <TrendingUp className="w-5 h-5 text-primary-500" />
-                  <h3 className="font-semibold text-gray-900">Popularity</h3>
+                  <h3 className="font-semibold text-gray-900">{m.popularity()}</h3>
                 </div>
                 <p className="text-gray-600">
                   {attraction.total_views
-                    ? `${attraction.total_views.toLocaleString()} views`
-                    : "Popular destination"}
+                    ? m.views_count({ count: attraction.total_views })
+                    : m.popular_destination()}
                 </p>
               </div>
 
               <div className="bg-white p-4 rounded-lg border border-gray-200">
                 <div className="flex items-center gap-3 mb-2">
                   <MapPin className="w-5 h-5 text-primary-500" />
-                  <h3 className="font-semibold text-gray-900">Location</h3>
+                  <h3 className="font-semibold text-gray-900">{m.location()}</h3>
                 </div>
                 <p className="text-gray-600">{attractionCity}</p>
               </div>
@@ -489,7 +490,7 @@ const AttractionDetailPage = () => {
 
             {/* Description */}
             <div className="bg-white p-6 rounded-lg border border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">About</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">{m.about()}</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
                 {displayDescription}
               </p>
@@ -498,7 +499,7 @@ const AttractionDetailPage = () => {
                   onClick={() => setShowFullDescription(!showFullDescription)}
                   className="text-primary-600 hover:text-primary-700 font-medium"
                 >
-                  {showFullDescription ? "Show less" : "Read more"}
+                  {showFullDescription ? m.show_less() : m.read_more()}
                 </button>
               )}
             </div>
@@ -506,7 +507,7 @@ const AttractionDetailPage = () => {
             {/* Location Section */}
             <div className="bg-white p-6 rounded-lg border border-gray-200">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Location
+                {m.location()}
               </h2>
 
               {/* Map */}
@@ -523,7 +524,7 @@ const AttractionDetailPage = () => {
                 <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center mb-4">
                   <div className="text-center">
                     <MapIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500">Location not available</p>
+                    <p className="text-gray-500">{m.location_not_available()}</p>
                   </div>
                 </div>
               )}
@@ -544,7 +545,7 @@ const AttractionDetailPage = () => {
                     );
                   }}
                 >
-                  Get Directions
+                  {m.get_directions()}
                 </Button>
               )}
             </div>
@@ -554,7 +555,7 @@ const AttractionDetailPage = () => {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    Reviews
+                    {m.reviews()}
                   </h2>
                   <div className="flex items-center gap-2">
                     <Rating
@@ -564,7 +565,7 @@ const AttractionDetailPage = () => {
                     />
                     <span className="text-gray-600">
                       ({ratings.length}{" "}
-                      {ratings.length === 1 ? "review" : "reviews"})
+                      {ratings.length === 1 ? m.review_one() : m.reviews_many()})
                     </span>
                   </div>
                 </div>
@@ -590,7 +591,7 @@ const AttractionDetailPage = () => {
             {/* Action Card */}
             <div className="bg-white p-6 rounded-lg border border-gray-200 sticky top-24">
               <h3 className="text-xl font-bold text-gray-900 mb-4">
-                Plan Your Visit
+                {m.plan_your_visit()}
               </h3>
               <div className="space-y-3">
                 <Button
@@ -603,7 +604,7 @@ const AttractionDetailPage = () => {
                   }
                   onClick={toggleFavorite}
                 >
-                  {isFavorite ? "Saved" : "Add to Favorites"}
+                  {isFavorite ? m.saved() : m.add_to_favorites()}
                 </Button>
                 <Button
                   variant="outline"
@@ -611,7 +612,7 @@ const AttractionDetailPage = () => {
                   leftIcon={<Share2 className="w-5 h-5" />}
                   onClick={handleShare}
                 >
-                  Share
+                  {m.share()}
                 </Button>
                 <Button
                   variant="outline"
@@ -627,7 +628,7 @@ const AttractionDetailPage = () => {
                     );
                   }}
                 >
-                  Get Directions
+                  {m.get_directions()}
                 </Button>
 
                 {canManage && (
@@ -638,7 +639,7 @@ const AttractionDetailPage = () => {
                       onClick={openEditModal}
                       isLoading={editSaving}
                     >
-                      Edit attraction
+                      {m.edit_attraction()}
                     </Button>
                     <Button
                       variant="danger"
@@ -646,7 +647,7 @@ const AttractionDetailPage = () => {
                       onClick={handleDelete}
                       disabled={editSaving}
                     >
-                      Delete attraction
+                      {m.delete_attraction()}
                     </Button>
                   </>
                 )}
@@ -656,7 +657,7 @@ const AttractionDetailPage = () => {
             {/* Similar Attractions */}
             <div className="bg-white p-6 rounded-lg border border-gray-200">
               <h3 className="text-xl font-bold text-gray-900 mb-4">
-                You Might Also Like
+                {m.you_might_also_like()}
               </h3>
               {loadingSimilar ? (
                 <div className="space-y-4">
@@ -706,7 +707,7 @@ const AttractionDetailPage = () => {
                       onClick={() => navigate(`/attractions`)}
                       className="text-primary-600 hover:text-primary-700 font-medium text-sm w-full text-center"
                     >
-                      View All Similar
+                      {m.view_all_similar()}
                     </button>
                   )}
                 </div>
@@ -721,7 +722,7 @@ const AttractionDetailPage = () => {
         <section className="py-12 bg-white">
           <Container size="lg">
             <h2 className="text-3xl font-bold text-gray-900 mb-8">
-              Explore Similar Attractions
+              {m.explore_similar()}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {similarAttractions.slice(0, 6).map((similar) => (
@@ -736,57 +737,57 @@ const AttractionDetailPage = () => {
       <Modal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
-        title="Edit attraction"
+        title={m.edit_attraction()}
         size="lg"
       >
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label="Name (localized)"
+              label={m.admin_name_localized()}
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              placeholder="e.g. Kok Tobe"
+              placeholder={m.placeholder_name_example()}
               required
             />
             <Input
-              label="City (localized)"
+              label={m.admin_city_localized()}
               value={editCity}
               onChange={(e) => setEditCity(e.target.value)}
-              placeholder="e.g. Almaty"
+              placeholder={m.placeholder_city_example()}
               required
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Description (localized)
+              {m.admin_description_localized()}
             </label>
             <textarea
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[100px]"
-              placeholder="Short description..."
+              placeholder={m.placeholder_description_short()}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label="Address (localized)"
+              label={m.admin_address_localized()}
               value={editAddress}
               onChange={(e) => setEditAddress(e.target.value)}
-              placeholder="Address..."
+              placeholder={m.placeholder_address()}
             />
             <Input
-              label="Country (localized)"
+              label={m.admin_country_localized()}
               value={editCountry}
               onChange={(e) => setEditCountry(e.target.value)}
-              placeholder="Country..."
+              placeholder={m.placeholder_country()}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label="Latitude"
+              label={m.admin_latitude()}
               type="number"
               step="any"
               value={editLatitude ?? ""}
@@ -795,10 +796,10 @@ const AttractionDetailPage = () => {
                   e.target.value ? parseFloat(e.target.value) : undefined,
                 )
               }
-              placeholder="e.g. 43.236"
+              placeholder={m.placeholder_latitude()}
             />
             <Input
-              label="Longitude"
+              label={m.admin_longitude()}
               type="number"
               step="any"
               value={editLongitude ?? ""}
@@ -807,13 +808,13 @@ const AttractionDetailPage = () => {
                   e.target.value ? parseFloat(e.target.value) : undefined,
                 )
               }
-              placeholder="e.g. 76.895"
+              placeholder={m.placeholder_longitude()}
             />
           </div>
 
           <div>
             <h4 className="font-semibold text-gray-900 mb-2">
-              Categories
+              {m.admin_categories_label()}
             </h4>
             {loadingAdminCategories ? (
               <div className="space-y-2">
@@ -843,7 +844,7 @@ const AttractionDetailPage = () => {
                         }}
                       />
                       <span className="text-sm text-gray-900">
-                        {cat.name_en}
+                        {getCategoryName(cat)}
                       </span>
                     </label>
                   );
@@ -858,14 +859,14 @@ const AttractionDetailPage = () => {
               onClick={() => setEditModalOpen(false)}
               disabled={editSaving}
             >
-              Cancel
+              {m.cancel()}
             </Button>
             <Button
               variant="primary"
               onClick={handleSaveEdit}
               isLoading={editSaving}
             >
-              Save changes
+              {m.save_changes()}
             </Button>
           </div>
         </div>

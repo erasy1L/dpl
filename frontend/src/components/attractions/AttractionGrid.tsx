@@ -2,6 +2,8 @@ import { Attraction } from "../../types/attraction.types";
 import { Skeleton, EmptyState } from "../ui";
 import AttractionCard from "./AttractionCard";
 import { Compass } from "lucide-react";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 interface AttractionGridProps {
   attractions: Attraction[];
@@ -12,8 +14,11 @@ interface AttractionGridProps {
 const AttractionGrid = ({
   attractions,
   loading = false,
-  emptyMessage = "No attractions found",
+  emptyMessage,
 }: AttractionGridProps) => {
+  useLocale();
+  const displayEmptyMessage = emptyMessage ?? m.attractions_empty_default();
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -35,8 +40,8 @@ const AttractionGrid = ({
     return (
       <EmptyState
         icon={<Compass className="w-16 h-16" />}
-        title={emptyMessage}
-        description="Try adjusting your filters or search query to find what you're looking for."
+        title={displayEmptyMessage}
+        description={m.attractions_empty_hint()}
       />
     );
   }

@@ -5,6 +5,9 @@ import { AttractionFilters as Filters } from "../../types/attraction.types";
 import { Button } from "../ui";
 import { CITIES } from "../../utils/constants";
 import categoryService from "../../services/category.service";
+import { getCategoryName } from "../../utils/localization";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 interface AttractionFiltersProps {
   filters: Filters;
@@ -21,6 +24,7 @@ const AttractionFilters = ({
   isMobile = false,
   onClose,
 }: AttractionFiltersProps) => {
+  useLocale();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -75,7 +79,7 @@ const AttractionFilters = ({
     <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+        <h3 className="text-lg font-semibold text-gray-900">{m.filters()}</h3>
         {isMobile && onClose && (
           <button
             onClick={onClose}
@@ -88,7 +92,7 @@ const AttractionFilters = ({
 
       {/* Categories */}
       <div>
-        <h4 className="text-sm font-medium text-gray-900 mb-3">Categories</h4>
+        <h4 className="text-sm font-medium text-gray-900 mb-3">{m.filter_categories()}</h4>
         {loading ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
@@ -109,7 +113,7 @@ const AttractionFilters = ({
                   className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
                 />
                 <span className="text-sm text-gray-700">
-                  {category.name_en}
+                  {getCategoryName(category)}
                 </span>
               </label>
             ))}
@@ -119,7 +123,7 @@ const AttractionFilters = ({
 
       {/* Cities */}
       <div>
-        <h4 className="text-sm font-medium text-gray-900 mb-3">Cities</h4>
+        <h4 className="text-sm font-medium text-gray-900 mb-3">{m.filter_cities()}</h4>
         <div className="space-y-2 max-h-64 overflow-y-auto">
           {CITIES.slice(0, 10).map((city) => (
             <label
@@ -141,7 +145,7 @@ const AttractionFilters = ({
       {/* Rating */}
       <div>
         <h4 className="text-sm font-medium text-gray-900 mb-3">
-          Minimum Rating
+          {m.filter_min_rating()}
         </h4>
         <div className="space-y-2">
           {[5, 4, 3, 2, 1].map((rating) => (
@@ -166,7 +170,7 @@ const AttractionFilters = ({
                   />
                 ))}
               </div>
-              <span className="text-sm">& up</span>
+              <span className="text-sm">{m.filter_rating_and_up()}</span>
             </button>
           ))}
         </div>
@@ -175,7 +179,7 @@ const AttractionFilters = ({
       {/* Clear All */}
       {hasActiveFilters && (
         <Button variant="outline" fullWidth onClick={onReset} className="mt-4">
-          Clear All Filters
+          {m.filter_clear_all()}
         </Button>
       )}
     </div>

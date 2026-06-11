@@ -1,5 +1,8 @@
 import { Category } from "../../types/attraction.types";
 import { cn } from "../../utils/cn";
+import { getCategoryName } from "../../utils/localization";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 import {
   Landmark,
   MapPin,
@@ -45,6 +48,7 @@ interface CategoryCardProps {
 }
 
 const CategoryCard = ({ category, onClick, className }: CategoryCardProps) => {
+  useLocale();
   const IconComponent = getCategoryIcon(category.name_en);
   const count = category.attraction_count ?? 0;
 
@@ -66,12 +70,12 @@ const CategoryCard = ({ category, onClick, className }: CategoryCardProps) => {
 
       {/* Name */}
       <h3 className="font-semibold text-gray-900 mb-1 text-center">
-        {category.name_en}
+        {getCategoryName(category)}
       </h3>
 
       {/* Count */}
       <p className="text-sm text-gray-600">
-        {count} {count === 1 ? "place" : "places"}
+        {count} {count === 1 ? m.category_place_one() : m.category_places_many()}
       </p>
     </button>
   );

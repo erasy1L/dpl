@@ -3,12 +3,15 @@ import { Eye, Star, Heart } from "lucide-react";
 import { UserActivity } from "../types/user.types";
 import { formatRelativeTime } from "../utils/formatters";
 import { cn } from "../utils/cn";
+import { useLocale } from "../contexts/LocaleContext";
+import * as m from "../paraglide/messages.js";
 
 interface ActivityItemProps {
   activity: UserActivity;
 }
 
 const ActivityItem = ({ activity }: ActivityItemProps) => {
+  useLocale();
   const navigate = useNavigate();
 
   const getIcon = () => {
@@ -25,11 +28,11 @@ const ActivityItem = ({ activity }: ActivityItemProps) => {
   const getDescription = () => {
     switch (activity.type) {
       case "view":
-        return "Viewed";
+        return m.activity_viewed();
       case "rating":
-        return `Rated ${activity.details?.rating || 0} stars`;
+        return m.activity_rated({ rating: activity.details?.rating || 0 });
       case "favorite":
-        return "Added to favorites";
+        return m.activity_favorited();
     }
   };
 

@@ -6,8 +6,11 @@ import { Button, Input, Skeleton, EmptyState, Badge } from "../../components/ui"
 import companyService from "../../services/company.service";
 import { TourCompany } from "../../types/tour.types";
 import { getLocalizedText } from "../../utils/localization";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 const CompaniesListPage = () => {
+  useLocale();
   const [companies, setCompanies] = useState<TourCompany[]>([]);
   const [cityFilter, setCityFilter] = useState("");
   const [loading, setLoading] = useState(true);
@@ -36,19 +39,17 @@ const CompaniesListPage = () => {
         <header className="mb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-1">
-              Tour companies
+              {m.companies_title()}
             </h1>
-            <p className="text-gray-600">
-              Find trusted operators offering tours across Kazakhstan.
-            </p>
+            <p className="text-gray-600">{m.companies_subtitle()}</p>
           </div>
           <div className="w-full md:w-72">
             <Input
-              label="Filter by city"
+              label={m.companies_filter_city()}
               value={cityFilter}
               onChange={(e) => setCityFilter(e.target.value)}
               leftIcon={<MapPin className="w-4 h-4" />}
-              placeholder="Almaty, Astana..."
+              placeholder={m.tours_city_placeholder()}
             />
           </div>
         </header>
@@ -61,8 +62,8 @@ const CompaniesListPage = () => {
           </div>
         ) : companies.length === 0 ? (
           <EmptyState
-            title="No companies found"
-            description="Try clearing filters or searching in another city."
+            title={m.companies_empty_title()}
+            description={m.companies_empty_desc()}
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -101,7 +102,7 @@ const CompaniesListPage = () => {
                           className="inline-flex items-center gap-1"
                         >
                           <CheckCircle2 className="w-3 h-3" />
-                          Verified
+                          {m.companies_verified()}
                         </Badge>
                       )}
                     </div>
@@ -110,7 +111,10 @@ const CompaniesListPage = () => {
                       {address && ` · ${address}`}
                     </p>
                     <p className="text-xs text-gray-500 mb-2">
-                      {c.total_tours} tours · Rating {c.rating.toFixed(1)}
+                      {m.companies_tours_rating({
+                        count: c.total_tours,
+                        rating: c.rating.toFixed(1),
+                      })}
                     </p>
                     <Button
                       variant="outline"
@@ -120,7 +124,7 @@ const CompaniesListPage = () => {
                         navigate(`/companies/${c.id}`);
                       }}
                     >
-                      View details
+                      {m.companies_view_details()}
                     </Button>
                   </div>
                 </div>
@@ -134,4 +138,3 @@ const CompaniesListPage = () => {
 };
 
 export default CompaniesListPage;
-

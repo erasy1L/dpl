@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { ChevronUp, ChevronDown, TrendingUp, TrendingDown, Award, Medal } from "lucide-react";
 import { cn } from "../../utils/cn";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 interface Column {
   key: string;
@@ -16,6 +18,7 @@ interface TrendingTableProps {
 }
 
 const TrendingTable = ({ data, columns, className }: TrendingTableProps) => {
+  useLocale();
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
@@ -51,7 +54,7 @@ const TrendingTable = ({ data, columns, className }: TrendingTableProps) => {
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Rank
+                {m.table_rank()}
               </th>
               {columns.map((column) => (
                 <th

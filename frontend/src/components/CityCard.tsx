@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { MapPin } from "lucide-react";
 import { cn } from "../utils/cn";
+import { useLocale } from "../contexts/LocaleContext";
+import * as m from "../paraglide/messages.js";
 
 interface CityCardProps {
   name: string;
@@ -15,6 +17,7 @@ const CityCard = ({
   attractionCount,
   className,
 }: CityCardProps) => {
+  useLocale();
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -43,13 +46,16 @@ const CityCard = ({
       <div className="absolute inset-0 flex flex-col justify-end p-6">
         <div className="flex items-center gap-2 mb-2 text-white/90">
           <MapPin className="w-5 h-5" />
-          <span className="text-sm font-medium">Kazakhstan</span>
+          <span className="text-sm font-medium">{m.country_kazakhstan()}</span>
         </div>
         <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
           {name}
         </h3>
         <p className="text-white/90 text-sm">
-          {attractionCount} {attractionCount === 1 ? "attraction" : "attractions"}
+          {attractionCount}{" "}
+          {attractionCount === 1
+            ? m.city_attraction_one()
+            : m.city_attractions_many()}
         </p>
       </div>
     </button>

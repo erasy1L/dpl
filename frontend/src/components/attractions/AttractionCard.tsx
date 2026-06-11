@@ -5,6 +5,8 @@ import { Badge, Rating } from "../ui";
 import { cn } from "../../utils/cn";
 import { getLocalizedText } from "../../utils/localization";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 interface AttractionCardProps {
   attraction: Attraction;
@@ -12,6 +14,7 @@ interface AttractionCardProps {
 }
 
 const AttractionCard = ({ attraction, className }: AttractionCardProps) => {
+  useLocale();
   const navigate = useNavigate();
   const { user } = useAuth();
   const canManage =
@@ -57,7 +60,7 @@ const AttractionCard = ({ attraction, className }: AttractionCardProps) => {
                 handleClick();
               }}
             >
-              View Details
+              {m.view_details()}
             </button>
             {canManage && (
               <button
@@ -67,7 +70,7 @@ const AttractionCard = ({ attraction, className }: AttractionCardProps) => {
                   navigate(`/attractions/${attraction.id}?edit=1`);
                 }}
               >
-                Edit
+                {m.edit()}
               </button>
             )}
           </div>

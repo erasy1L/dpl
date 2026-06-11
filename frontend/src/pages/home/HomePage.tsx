@@ -16,16 +16,25 @@ import categoryService from "../../services/category.service";
 import tourService from "../../services/tour.service";
 import recommendationService from "../../services/recommendation.service";
 import { Tour, TourDifficulty } from "../../types/tour.types";
-import { getLocalizedText } from "../../utils/localization";
+import { getLocalizedText, getCategoryName } from "../../utils/localization";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
-const tourDifficultyLabel: Record<TourDifficulty, string> = {
-  easy: "Easy",
-  moderate: "Moderate",
-  hard: "Hard",
-  extreme: "Extreme",
+const getTourDifficultyLabel = (difficulty: TourDifficulty): string => {
+  switch (difficulty) {
+    case "easy":
+      return m.tour_difficulty_easy();
+    case "moderate":
+      return m.tour_difficulty_moderate();
+    case "hard":
+      return m.tour_difficulty_hard();
+    case "extreme":
+      return m.tour_difficulty_extreme();
+  }
 };
 
 const HomePage = () => {
+  useLocale();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
@@ -174,10 +183,10 @@ const HomePage = () => {
         {/* Content */}
         <Container size="lg" className="relative z-10 text-center py-20 mb-14">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-            Discover Kazakhstan
+            {m.home_hero_title()}
           </h1>
           <p className="text-xl md:text-2xl text-white/90 mb-8">
-            Explore amazing destinations powered by AI
+            {m.home_hero_subtitle()}
           </p>
 
           {/* Search Bar */}
@@ -194,7 +203,7 @@ const HomePage = () => {
                 size="lg"
                 className="h-12 absolute right-0.5 top-1/2 -translate-y-1/2"
               >
-                Search
+                {m.home_search_button()}
               </Button>
             </div>
           </div>
@@ -210,7 +219,7 @@ const HomePage = () => {
                   className="bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 cursor-pointer transition-colors px-4 py-2"
                   onClick={() => handleCategoryClick(category.id)}
                 >
-                  {category.name_en}
+                  {getCategoryName(category)}
                 </Badge>
               ))}
           </div>
@@ -223,10 +232,10 @@ const HomePage = () => {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                Explore by Category
+                {m.home_categories_title()}
               </h2>
               <p className="text-gray-600">
-                Find attractions that match your interests
+                {m.home_categories_subtitle()}
               </p>
             </div>
             <Button
@@ -235,7 +244,7 @@ const HomePage = () => {
               rightIcon={<ArrowRight className="w-4 h-4" />}
               className="hidden md:flex"
             >
-              View All
+              {m.home_view_all()}
             </Button>
           </div>
 
@@ -251,7 +260,7 @@ const HomePage = () => {
               onClick={() => navigate("/attractions")}
               fullWidth
             >
-              View All Categories
+              {m.home_view_all_categories()}
             </Button>
           </div>
         </Container>
@@ -265,9 +274,9 @@ const HomePage = () => {
               <Flame className="w-8 h-8 text-orange-500" />
               <div>
                 <h2 className="text-3xl font-bold text-gray-900">
-                  Trending Now
+                  {m.home_trending_title()}
                 </h2>
-                <p className="text-gray-600">Popular destinations this week</p>
+                <p className="text-gray-600">{m.home_trending_subtitle()}</p>
               </div>
             </div>
             <Button
@@ -276,7 +285,7 @@ const HomePage = () => {
               rightIcon={<ArrowRight className="w-4 h-4" />}
               className="hidden md:flex"
             >
-              See All
+              {m.home_see_all()}
             </Button>
           </div>
 
@@ -309,7 +318,7 @@ const HomePage = () => {
               onClick={() => navigate("/attractions")}
               fullWidth
             >
-              See All Trending
+              {m.home_see_all_trending()}
             </Button>
           </div>
         </Container>
@@ -323,10 +332,10 @@ const HomePage = () => {
               <Star className="w-8 h-8 text-amber-500 fill-amber-500" />
               <div>
                 <h2 className="text-3xl font-bold text-gray-900">
-                  Highest Rated
+                  {m.home_top_rated_title()}
                 </h2>
                 <p className="text-gray-600">
-                  Top-rated attractions by travelers
+                  {m.home_top_rated_subtitle()}
                 </p>
               </div>
             </div>
@@ -336,7 +345,7 @@ const HomePage = () => {
               rightIcon={<ArrowRight className="w-4 h-4" />}
               className="hidden md:flex"
             >
-              Explore More
+              {m.home_explore_more()}
             </Button>
           </div>
 
@@ -369,7 +378,7 @@ const HomePage = () => {
               onClick={() => navigate("/attractions?sort=rating")}
               fullWidth
             >
-              Explore More
+              {m.home_explore_more()}
             </Button>
           </div>
         </Container>
@@ -383,10 +392,10 @@ const HomePage = () => {
               <Briefcase className="w-8 h-8 text-primary-500" />
               <div>
                 <h2 className="text-3xl font-bold text-gray-900">
-                  Guided tours
+                  {m.home_tours_title()}
                 </h2>
                 <p className="text-gray-600">
-                  Book experiences across Kazakhstan
+                  {m.home_tours_subtitle()}
                 </p>
               </div>
             </div>
@@ -396,7 +405,7 @@ const HomePage = () => {
               rightIcon={<ArrowRight className="w-4 h-4" />}
               className="hidden md:flex"
             >
-              Browse all tours
+              {m.home_browse_all_tours()}
             </Button>
           </div>
 
@@ -417,7 +426,7 @@ const HomePage = () => {
             </div>
           ) : featuredTours.length === 0 ? (
             <p className="text-center text-gray-600 py-10">
-              No tours are listed yet. Check back soon.
+              {m.home_tours_empty()}
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -469,8 +478,8 @@ const HomePage = () => {
                       <div className="flex items-center justify-between text-sm text-gray-600 mt-2">
                         <span>
                           {tour.duration_days > 0
-                            ? `${tour.duration_days} days`
-                            : `${tour.duration_hours} hours`}
+                            ? m.duration_days({ count: tour.duration_days })
+                            : m.duration_hours({ count: tour.duration_hours })}
                         </span>
                         <span className="font-semibold text-primary-600">
                           {tour.price.toLocaleString()} {tour.currency}
@@ -482,7 +491,7 @@ const HomePage = () => {
                           {startCity}
                         </span>
                         <Badge variant="neutral" size="sm">
-                          {tourDifficultyLabel[tour.difficulty]}
+                          {getTourDifficultyLabel(tour.difficulty)}
                         </Badge>
                       </div>
                     </div>
@@ -498,7 +507,7 @@ const HomePage = () => {
               onClick={() => navigate("/tours")}
               fullWidth
             >
-              Browse all tours
+              {m.home_browse_all_tours()}
             </Button>
           </div>
         </Container>
@@ -513,10 +522,10 @@ const HomePage = () => {
                 <Sparkles className="w-8 h-8 text-primary-500" />
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900">
-                    Recommended for You
+                    {m.home_recommended_title()}
                   </h2>
                   <p className="text-gray-600">
-                    Picked for you from one combined feed
+                    {m.home_recommended_subtitle()}
                   </p>
                 </div>
               </div>
@@ -526,7 +535,7 @@ const HomePage = () => {
                 rightIcon={<ArrowRight className="w-4 h-4" />}
                 className="hidden md:flex"
               >
-                View All
+                {m.home_view_all()}
               </Button>
             </div>
 
@@ -559,7 +568,7 @@ const HomePage = () => {
                 onClick={() => navigate("/recommendations")}
                 fullWidth
               >
-                View All Recommendations
+                {m.home_view_all_recommendations()}
               </Button>
             </div>
           </Container>
@@ -571,10 +580,10 @@ const HomePage = () => {
         <Container size="lg">
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Explore by City
+              {m.home_cities_title()}
             </h2>
             <p className="text-gray-600">
-              Discover attractions in Kazakhstan's major cities
+              {m.home_cities_subtitle()}
             </p>
           </div>
 
@@ -612,11 +621,10 @@ const HomePage = () => {
         <section className="py-16 md:py-20 bg-gradient-to-br from-primary-500 via-primary-600 to-secondary-500">
           <Container size="lg" className="text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Start Your Journey Today
+              {m.home_cta_title()}
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-              Sign up to get personalized recommendations and save your favorite
-              attractions
+              {m.home_cta_subtitle()}
             </p>
             <Button
               variant="secondary"
@@ -624,7 +632,7 @@ const HomePage = () => {
               onClick={() => navigate("/register")}
               className="bg-white text-primary-600 hover:bg-gray-100"
             >
-              Get Started
+              {m.home_cta_button()}
             </Button>
           </Container>
         </section>

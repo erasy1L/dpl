@@ -2,6 +2,8 @@ import { Rating } from "../../types/rating.types";
 import { Button, EmptyState, Skeleton } from "../ui";
 import ReviewCard from "./ReviewCard";
 import { MessageSquare } from "lucide-react";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 interface ReviewListProps {
   ratings: Rating[];
@@ -16,6 +18,8 @@ const ReviewList = ({
   hasMore = false,
   onLoadMore,
 }: ReviewListProps) => {
+  useLocale();
+
   if (loading && ratings.length === 0) {
     return (
       <div className="space-y-4">
@@ -39,8 +43,8 @@ const ReviewList = ({
     return (
       <EmptyState
         icon={<MessageSquare className="w-16 h-16" />}
-        title="No reviews yet"
-        description="Be the first to share your experience!"
+        title={m.no_reviews_title()}
+        description={m.no_reviews_desc()}
       />
     );
   }
@@ -54,7 +58,7 @@ const ReviewList = ({
       {hasMore && onLoadMore && (
         <div className="text-center pt-4">
           <Button variant="outline" onClick={onLoadMore} disabled={loading}>
-            {loading ? "Loading..." : "Load More Reviews"}
+            {loading ? m.loading() : m.load_more_reviews()}
           </Button>
         </div>
       )}

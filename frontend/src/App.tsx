@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./contexts/AuthContext";
+import { LocaleProvider } from "./contexts/LocaleContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/layout/Layout";
 import {
@@ -46,7 +47,8 @@ function App() {
     <>
       <Toaster position="top-right" />
       <AuthProvider>
-        <Router>
+        <LocaleProvider>
+          <Router>
           <ChatProvider>
             <ScrollToTop />
             <Routes>
@@ -197,7 +199,8 @@ function App() {
             <ChatBubble />
             <ChatPanel />
           </ChatProvider>
-        </Router>
+          </Router>
+        </LocaleProvider>
       </AuthProvider>
     </>
   );

@@ -4,6 +4,8 @@ import { Rating } from "../../types/rating.types";
 import { Avatar } from "../ui";
 import { formatRelativeTime } from "../../utils/formatters";
 import { cn } from "../../utils/cn";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 interface ReviewCardProps {
   rating: Rating;
@@ -11,6 +13,7 @@ interface ReviewCardProps {
 }
 
 const ReviewCard = ({ rating, className }: ReviewCardProps) => {
+  useLocale();
   const [isExpanded, setIsExpanded] = useState(false);
   const [helpful, setHelpful] = useState(false);
 
@@ -61,7 +64,7 @@ const ReviewCard = ({ rating, className }: ReviewCardProps) => {
               onClick={() => setIsExpanded(!isExpanded)}
               className="text-primary-600 hover:text-primary-700 text-sm font-medium mt-2"
             >
-              {isExpanded ? "Show less" : "Read more"}
+              {isExpanded ? m.show_less() : m.read_more()}
             </button>
           )}
         </div>
@@ -78,7 +81,7 @@ const ReviewCard = ({ rating, className }: ReviewCardProps) => {
         )}
       >
         <ThumbsUp className={cn("w-4 h-4", helpful && "fill-current")} />
-        <span>Helpful</span>
+        <span>{m.helpful()}</span>
       </button>
     </div>
   );

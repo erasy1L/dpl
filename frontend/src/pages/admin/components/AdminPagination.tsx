@@ -1,4 +1,6 @@
 import { Button } from "../../../components/ui";
+import { useLocale } from "../../../contexts/LocaleContext";
+import * as m from "../../../paraglide/messages.js";
 
 interface AdminPaginationProps {
   page: number;
@@ -11,6 +13,8 @@ const AdminPagination = ({
   totalPages,
   onPageChange,
 }: AdminPaginationProps) => {
+  useLocale();
+
   if (totalPages <= 1) return null;
 
   const maxVisible = 5;
@@ -43,7 +47,7 @@ const AdminPagination = ({
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
       >
-        Prev
+        {m.pagination_prev()}
       </Button>
 
       <div className="flex items-center gap-1">
@@ -92,11 +96,10 @@ const AdminPagination = ({
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
       >
-        Next
+        {m.pagination_next()}
       </Button>
     </div>
   );
 };
 
 export default AdminPagination;
-

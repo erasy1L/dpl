@@ -7,8 +7,11 @@ import bookingService from "../../services/booking.service";
 import { Tour, TourSchedule } from "../../types/tour.types";
 import { getLocalizedText } from "../../utils/localization";
 import toast from "react-hot-toast";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 const BookingFlowPage = () => {
+  useLocale();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -36,6 +39,12 @@ const BookingFlowPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
   const [redirectingToPayment, setRedirectingToPayment] = useState(false);
+
+  const stepLabels = [
+    m.booking_step_date(),
+    m.booking_step_details(),
+    m.booking_step_payment(),
+  ];
 
   useEffect(() => {
     if (!tourId) {
@@ -70,7 +79,7 @@ const BookingFlowPage = () => {
 
   const handleNextFromSchedule = () => {
     if (!selectedScheduleId) {
-      toast.error("Please select a date");
+      toast.error(m.toast_select_date());
       return;
     }
     setStep(2);
@@ -79,11 +88,11 @@ const BookingFlowPage = () => {
   const handleConfirm = async () => {
     if (!tourId || !selectedScheduleId || !tour) return;
     if (!contactPhone.trim() || !contactEmail.trim()) {
-      toast.error("Please fill in contact phone and email");
+      toast.error(m.toast_fill_contact());
       return;
     }
     if (numberOfPeople <= 0) {
-      toast.error("Number of people must be at least 1");
+      toast.error(m.toast_min_people());
       return;
     }
     try {
@@ -98,10 +107,10 @@ const BookingFlowPage = () => {
       });
       setCreatedBookingId(booking.id);
       setStep(3);
-      toast.success("Booking reserved. Complete payment to confirm.");
+      toast.success(m.toast_booking_reserved());
     } catch (error: any) {
       console.error("Failed to create booking:", error);
-      toast.error(error?.message || "Failed to create booking");
+      toast.error(error?.message || m.toast_create_booking_failed());
     } finally {
       setSubmitting(false);
     }
@@ -111,10 +120,10 @@ const BookingFlowPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <EmptyState
-          title="No tour selected"
-          description="Please choose a tour first."
+          title={m.booking_no_tour_title()}
+          description={m.booking_no_tour_desc()}
           action={{
-            label: "Browse tours",
+            label: m.bookings_browse_tours(),
             onClick: () => navigate("/tours"),
           }}
         />
@@ -140,10 +149,10 @@ const BookingFlowPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <EmptyState
-          title="Tour not found"
-          description="The tour you are trying to book is not available."
+          title={m.tour_not_found_title()}
+          description={m.tour_not_found_desc()}
           action={{
-            label: "Back to tours",
+            label: m.tour_back_to_tours(),
             onClick: () => navigate("/tours"),
           }}
         />
@@ -179,14 +188,12 @@ const BookingFlowPage = () => {
       <Container size="lg" className="py-8">
         <header className="mb-6">
           <p className="text-xs font-medium text-primary-600 mb-1 uppercase tracking-wide">
-            Booking
+            {m.booking_header_label()}
           </p>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
             {name}
           </h1>
-          <p className="text-sm text-gray-600">
-            Choose a date, enter details, then complete payment securely.
-          </p>
+          <p className="text-sm text-gray-600">{m.booking_header_subtitle()}</p>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -194,7 +201,7 @@ const BookingFlowPage = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Stepper */}
             <div className="flex items-center justify-between mb-2">
-              {["Select date", "Details", "Payment"].map((label, idx) => {
+              {stepLabels.map((label, idx) => {
                 const currentIndex = idx + 1;
                 const isActive = step === currentIndex;
                 const isDone = step > currentIndex;
@@ -234,14 +241,14 @@ const BookingFlowPage = () => {
             {step === 1 && (
               <section className="bg-white rounded-lg border border-gray-200 p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-3">
-                  Select a date
+                  {m.booking_select_date_title()}
                 </h2>
                 {loadingSchedules ? (
                   <Skeleton variant="rectangular" height={180} />
                 ) : schedules.length === 0 ? (
                   <EmptyState
-                    title="No dates available"
-                    description="This tour currently has no available schedules."
+                    title={m.booking_no_dates_title()}
+                    description={m.booking_no_dates_desc()}
                   />
                 ) : (
                   <div className="space-y-3">
@@ -265,7 +272,10 @@ const BookingFlowPage = () => {
                             {new Date(s.end_date).toLocaleDateString()}
                           </p>
                           <p className="text-xs text-gray-600">
-                            Status: {s.status} · {s.available_spots} spots left
+                            {m.booking_schedule_status({
+                              status: s.status,
+                              spots: s.available_spots,
+                            })}
                           </p>
                         </div>
                       </button>
@@ -278,7 +288,7 @@ const BookingFlowPage = () => {
                     onClick={handleNextFromSchedule}
                     disabled={!selectedScheduleId}
                   >
-                    Continue
+                    {m.continue()}
                   </Button>
                 </div>
               </section>
@@ -288,14 +298,14 @@ const BookingFlowPage = () => {
             {step === 2 && (
               <section className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
                 <h2 className="text-lg font-semibold text-gray-900 mb-1">
-                  Traveler details
+                  {m.booking_traveler_details()}
                 </h2>
                 <p className="text-xs text-gray-500 mb-3">
-                  We&apos;ll share these details with the tour company.
+                  {m.booking_details_hint()}
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
-                    label="Number of people"
+                    label={m.booking_number_of_people()}
                     type="number"
                     min={1}
                     value={numberOfPeople}
@@ -304,36 +314,36 @@ const BookingFlowPage = () => {
                     }
                   />
                   <Input
-                    label="Contact phone"
+                    label={m.booking_contact_phone()}
                     value={contactPhone}
                     onChange={(e) => setContactPhone(e.target.value)}
-                    placeholder="+7 ..."
+                    placeholder={m.booking_phone_placeholder()}
                   />
                 </div>
                 <Input
-                  label="Contact email"
+                  label={m.booking_contact_email()}
                   type="email"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={m.auth_email_placeholder()}
                 />
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Notes (optional)
+                    {m.booking_notes_label()}
                   </label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[100px]"
-                    placeholder="Special requests, preferences, etc."
+                    placeholder={m.booking_notes_placeholder()}
                   />
                 </div>
                 <div className="flex justify-between mt-2">
                   <Button variant="outline" onClick={() => setStep(1)}>
-                    Back
+                    {m.back()}
                   </Button>
                   <Button variant="primary" onClick={() => setStep(3)}>
-                    Review booking
+                    {m.review_booking()}
                   </Button>
                 </div>
               </section>
@@ -343,30 +353,40 @@ const BookingFlowPage = () => {
             {step === 3 && (
               <section className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
                 <h2 className="text-lg font-semibold text-gray-900 mb-1">
-                  {createdBookingId ? "Pay for your booking" : "Review booking"}
+                  {createdBookingId
+                    ? m.booking_pay_title()
+                    : m.booking_review_title()}
                 </h2>
                 <p className="text-xs text-gray-500 mb-3">
                   {createdBookingId
-                    ? "You will be redirected to a secure checkout page. Your booking is confirmed after a successful payment."
-                    : "Please review the details before continuing."}
+                    ? m.booking_pay_desc()
+                    : m.booking_review_desc()}
                 </p>
                 {selectedSchedule && (
                   <div className="rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm space-y-1">
-                    <p className="font-medium text-gray-900">Selected date</p>
+                    <p className="font-medium text-gray-900">
+                      {m.booking_selected_date()}
+                    </p>
                     <p className="text-gray-700">
                       {new Date(selectedSchedule.start_date).toLocaleDateString()} –{" "}
                       {new Date(selectedSchedule.end_date).toLocaleDateString()}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {selectedSchedule.available_spots} spots currently available
+                      {m.booking_spots_available({
+                        count: selectedSchedule.available_spots,
+                      })}
                     </p>
                   </div>
                 )}
                 <div className="text-sm space-y-1">
-                  <p className="font-medium text-gray-900">Traveler details</p>
+                  <p className="font-medium text-gray-900">
+                    {m.booking_traveler_details()}
+                  </p>
                   <p className="text-gray-700">
                     {numberOfPeople}{" "}
-                    {numberOfPeople === 1 ? "person" : "people"}
+                    {numberOfPeople === 1
+                      ? m.booking_person_one()
+                      : m.booking_people_many()}
                   </p>
                   <p className="text-gray-700">{contactPhone}</p>
                   <p className="text-gray-700">{contactEmail}</p>
@@ -378,7 +398,7 @@ const BookingFlowPage = () => {
                 </div>
                 <div className="flex flex-wrap justify-between items-center gap-3 mt-4">
                   <Button variant="outline" onClick={() => setStep(2)} disabled={!!createdBookingId}>
-                    Back
+                    {m.back()}
                   </Button>
                   {!createdBookingId ? (
                     <Button
@@ -386,7 +406,7 @@ const BookingFlowPage = () => {
                       isLoading={submitting}
                       onClick={handleConfirm}
                     >
-                      Create booking
+                      {m.create_booking()}
                     </Button>
                   ) : (
                     <div className="flex flex-col gap-2 max-w-sm w-full">
@@ -395,14 +415,14 @@ const BookingFlowPage = () => {
                         isLoading={redirectingToPayment}
                         onClick={startCheckout}
                       >
-                        Pay now
+                        {m.pay_now()}
                       </Button>
                       <button
                         type="button"
                         className="text-sm text-primary-600 hover:underline"
                         onClick={() => navigate("/bookings")}
                       >
-                        I&apos;ll pay later (My bookings)
+                        {m.booking_pay_later()}
                       </button>
                     </div>
                   )}
@@ -421,30 +441,29 @@ const BookingFlowPage = () => {
           <aside className="space-y-4">
             <section className="bg-white rounded-lg border border-gray-200 p-5 sticky top-24">
               <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                Price summary
+                {m.booking_price_summary()}
               </h3>
               <div className="space-y-2 text-sm text-gray-700">
                 <div className="flex justify-between">
-                  <span>Price per person</span>
+                  <span>{m.booking_price_per_person()}</span>
                   <span>
                     {tour.price.toLocaleString()} {tour.currency}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Guests</span>
+                  <span>{m.booking_guests()}</span>
                   <span>{numberOfPeople}</span>
                 </div>
                 <div className="h-px bg-gray-200 my-2" />
                 <div className="flex justify-between font-semibold text-gray-900">
-                  <span>Total</span>
+                  <span>{m.total()}</span>
                   <span>
                     {totalPrice.toLocaleString()} {tour.currency}
                   </span>
                 </div>
               </div>
               <p className="mt-3 text-xs text-gray-500">
-                After you reserve, you can pay from this page. Availability of payment methods depends
-                on tour currency and your region.
+                {m.booking_summary_note()}
               </p>
             </section>
           </aside>
@@ -455,4 +474,3 @@ const BookingFlowPage = () => {
 };
 
 export default BookingFlowPage;
-

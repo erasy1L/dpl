@@ -1,27 +1,39 @@
-import { LocalizedString } from "../types/attraction.types";
+import { LocalizedString, Category } from "../types/attraction.types";
+import { getLocale } from "../paraglide/runtime.js";
 
 /**
- * Get localized text from a LocalizedString object
- * Falls back to first available language if preferred locale is not found
+ * Get localized category name from API fields.
+ */
+export function getCategoryName(category: Category, preferredLocale?: string): string {
+  const locale = preferredLocale ?? getCurrentLocale();
+  if (locale === "ru" && category.name_ru) return category.name_ru;
+  return category.name_en;
+}
+
+/**
+ * Get localized text from a LocalizedString object (API content).
+ * Falls back to first available language if preferred locale is not found.
  */
 export function getLocalizedText(
   localizedString: LocalizedString | undefined,
-  preferredLocale: string = "en",
+  preferredLocale?: string,
 ): string {
   if (!localizedString || typeof localizedString !== "object") {
     return "";
   }
 
+  const locale = preferredLocale ?? getCurrentLocale();
+
   // Try preferred locale
-  if (localizedString[preferredLocale]) {
-    return localizedString[preferredLocale];
+  if (localizedString[locale]) {
+    return localizedString[locale];
   }
 
   // Try fallback locales in order: en, ru, kz
   const fallbackLocales = ["en", "ru", "kz"];
-  for (const locale of fallbackLocales) {
-    if (localizedString[locale]) {
-      return localizedString[locale];
+  for (const fallback of fallbackLocales) {
+    if (localizedString[fallback]) {
+      return localizedString[fallback];
     }
   }
 
@@ -31,11 +43,12 @@ export function getLocalizedText(
 }
 
 /**
- * Get current locale from browser or default to 'en'
+ * Get current UI locale from Paraglide (localStorage → browser → en).
  */
 export function getCurrentLocale(): string {
-  // You can extend this to read from localStorage, context, or browser settings
-  const browserLang = navigator.language.split("-")[0];
-  const supportedLocales = ["en", "ru", "kz"];
-  return supportedLocales.includes(browserLang) ? browserLang : "en";
+  try {
+    return getLocale();
+  } catch {
+    return "en";
+  }
 }

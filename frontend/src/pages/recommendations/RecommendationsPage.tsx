@@ -9,8 +9,11 @@ import { Button, EmptyState } from "../../components/ui";
 import { Attraction } from "../../types/attraction.types";
 import recommendationService from "../../services/recommendation.service";
 import ratingService from "../../services/rating.service";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 const RecommendationsPage = () => {
+  useLocale();
   const navigate = useNavigate();
 
   const [attractions, setAttractions] = useState<Attraction[]>([]);
@@ -58,10 +61,9 @@ const RecommendationsPage = () => {
       <section className="bg-gradient-to-br from-primary-500 to-secondary-500 py-12">
         <Container size="lg" className="text-center">
           <Sparkles className="w-12 h-12 text-white mx-auto mb-4" />
-          <h1 className="text-4xl font-bold text-white mb-2">Recommendations</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">{m.recommendations_title()}</h1>
           <p className="text-xl text-white/90 max-w-2xl mx-auto">
-            {reason ||
-              "Places picked for you based on ratings, activity, and trends"}
+            {reason || m.recommendations_default_reason()}
           </p>
         </Container>
       </section>
@@ -69,8 +71,7 @@ const RecommendationsPage = () => {
       <Container size="xl" className="py-8">
         {ratingCount !== null && ratingCount < 3 && (
           <div className="mb-8 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 text-sm">
-            <strong>Tip:</strong> Rate at least 3 attractions to improve your
-            personalized mix (we still show trending picks until then).
+            <strong>{m.recommendations_tip_label()}</strong> {m.recommendations_tip()}
           </div>
         )}
 
@@ -78,7 +79,7 @@ const RecommendationsPage = () => {
           <div className="lg:col-span-3 space-y-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <h2 className="text-xl font-semibold text-gray-900">
-                Suggested attractions
+                {m.recommendations_suggested()}
               </h2>
               <div className="w-full md:w-72">
                 <CityFilter value={selectedCity} onChange={setSelectedCity} />
@@ -88,7 +89,7 @@ const RecommendationsPage = () => {
             <AttractionGrid
               attractions={attractions}
               loading={loading}
-              emptyMessage="No recommendations yet — try another city or explore attractions"
+              emptyMessage={m.recommendations_empty_grid()}
             />
 
             {!loading && attractions.length > 0 && (
@@ -98,23 +99,23 @@ const RecommendationsPage = () => {
                   onClick={() => setLimit((prev) => prev + 12)}
                   disabled={loading}
                 >
-                  Load more
+                  {m.load_more()}
                 </Button>
                 <Button
                   variant="ghost"
                   onClick={() => navigate("/attractions")}
                 >
-                  Explore all attractions
+                  {m.recommendations_explore_all()}
                 </Button>
               </div>
             )}
 
             {!loading && attractions.length === 0 && (
               <EmptyState
-                title="Nothing to show yet"
-                description="Browse attractions and add ratings so we can suggest better places."
+                title={m.recommendations_empty_title()}
+                description={m.recommendations_empty_desc()}
                 action={{
-                  label: "Explore attractions",
+                  label: m.profile_explore_attractions(),
                   onClick: () => navigate("/attractions"),
                 }}
               />

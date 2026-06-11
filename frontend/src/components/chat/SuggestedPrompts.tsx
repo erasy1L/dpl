@@ -1,21 +1,28 @@
-const PROMPTS = [
-  "What are the best places to visit in Almaty?",
-  "Show me tours to Charyn Canyon",
-  "Plan a 3-day trip in Astana",
-  "What's the best time to visit Kazakhstan?",
-  "Find me an adventure tour",
-];
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
+
+const PROMPT_KEYS = [
+  "chat_prompt_almaty",
+  "chat_prompt_charyn",
+  "chat_prompt_astana",
+  "chat_prompt_best_time",
+  "chat_prompt_adventure",
+] as const;
 
 interface SuggestedPromptsProps {
   onPick: (text: string) => void;
 }
 
 export default function SuggestedPrompts({ onPick }: SuggestedPromptsProps) {
+  useLocale();
+
+  const prompts = PROMPT_KEYS.map((key) => m[key]());
+
   return (
     <div className="px-3 pb-2 flex flex-col gap-2">
-      <p className="text-xs text-gray-500 font-medium">Try asking</p>
+      <p className="text-xs text-gray-500 font-medium">{m.chat_try_asking()}</p>
       <div className="flex flex-wrap gap-2">
-        {PROMPTS.map((p) => (
+        {prompts.map((p) => (
           <button
             key={p}
             type="button"

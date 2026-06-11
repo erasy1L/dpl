@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { Compass, Mail, Phone, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 const Footer = () => {
+  useLocale();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -18,8 +21,7 @@ const Footer = () => {
               </span>
             </div>
             <p className="text-gray-400 mb-4 leading-relaxed">
-              Discover the best tourism destinations across Kazakhstan. Your guide to
-              exploring cultural heritage, natural wonders, and modern attractions.
+              {m.footer_tagline()}
             </p>
             <div className="flex gap-3">
               <a
@@ -27,7 +29,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 bg-gray-800 hover:bg-primary-600 rounded-lg transition-colors"
-                aria-label="Facebook"
+                aria-label={m.aria_facebook()}
               >
                 <Facebook className="h-5 w-5" />
               </a>
@@ -36,7 +38,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 bg-gray-800 hover:bg-primary-600 rounded-lg transition-colors"
-                aria-label="Twitter"
+                aria-label={m.aria_twitter()}
               >
                 <Twitter className="h-5 w-5" />
               </a>
@@ -45,7 +47,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 bg-gray-800 hover:bg-primary-600 rounded-lg transition-colors"
-                aria-label="Instagram"
+                aria-label={m.aria_instagram()}
               >
                 <Instagram className="h-5 w-5" />
               </a>
@@ -54,7 +56,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 bg-gray-800 hover:bg-primary-600 rounded-lg transition-colors"
-                aria-label="LinkedIn"
+                aria-label={m.aria_linkedin()}
               >
                 <Linkedin className="h-5 w-5" />
               </a>
@@ -63,14 +65,14 @@ const Footer = () => {
 
           {/* Quick Links Column */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+            <h3 className="text-lg font-semibold mb-4">{m.footer_quick_links()}</h3>
             <ul className="space-y-2">
               <li>
                 <Link
                   to="/attractions"
                   className="text-gray-400 hover:text-primary-400 transition-colors"
                 >
-                  Explore Attractions
+                  {m.footer_explore_attractions()}
                 </Link>
               </li>
               <li>
@@ -78,7 +80,7 @@ const Footer = () => {
                   to="/categories"
                   className="text-gray-400 hover:text-primary-400 transition-colors"
                 >
-                  Categories
+                  {m.footer_categories()}
                 </Link>
               </li>
               <li>
@@ -86,7 +88,7 @@ const Footer = () => {
                   to="/popular"
                   className="text-gray-400 hover:text-primary-400 transition-colors"
                 >
-                  Popular Destinations
+                  {m.footer_popular_destinations()}
                 </Link>
               </li>
               <li>
@@ -94,7 +96,7 @@ const Footer = () => {
                   to="/about"
                   className="text-gray-400 hover:text-primary-400 transition-colors"
                 >
-                  About Us
+                  {m.footer_about_us()}
                 </Link>
               </li>
             </ul>
@@ -102,12 +104,12 @@ const Footer = () => {
 
           {/* Contact Column */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Contact</h3>
+            <h3 className="text-lg font-semibold mb-4">{m.footer_contact()}</h3>
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <Mail className="h-5 w-5 text-primary-400 mt-0.5" />
                 <div>
-                  <p className="text-gray-400">Email</p>
+                  <p className="text-gray-400">{m.footer_email()}</p>
                   <a
                     href="mailto:support@tourkz.com"
                     className="text-white hover:text-primary-400 transition-colors"
@@ -119,7 +121,7 @@ const Footer = () => {
               <li className="flex items-start gap-3">
                 <Phone className="h-5 w-5 text-primary-400 mt-0.5" />
                 <div>
-                  <p className="text-gray-400">Support</p>
+                  <p className="text-gray-400">{m.footer_support()}</p>
                   <a
                     href="tel:+77001234567"
                     className="text-white hover:text-primary-400 transition-colors"
@@ -134,13 +136,13 @@ const Footer = () => {
                 to="/terms"
                 className="block text-gray-400 hover:text-primary-400 transition-colors"
               >
-                Terms of Service
+                {m.footer_terms()}
               </Link>
               <Link
                 to="/privacy"
                 className="block text-gray-400 hover:text-primary-400 transition-colors"
               >
-                Privacy Policy
+                {m.footer_privacy()}
               </Link>
             </div>
           </div>
@@ -150,10 +152,10 @@ const Footer = () => {
         <div className="pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-sm text-center md:text-left">
-              © {currentYear} TourKZ. All rights reserved.
+              {m.footer_copyright({ year: currentYear })}
             </p>
             <p className="text-gray-500 text-sm text-center md:text-right">
-              Diploma Project - Information Systems
+              {m.footer_diploma_note()}
             </p>
           </div>
         </div>

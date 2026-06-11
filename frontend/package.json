@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "paraglide": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy localStorage preferredLanguage baseLocale --emit-ts-declarations",
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "pnpm paraglide && tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
@@ -23,6 +24,7 @@
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
+    "@inlang/paraglide-js": "^2.19.0",
     "@tailwindcss/vite": "^4.1.18",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",

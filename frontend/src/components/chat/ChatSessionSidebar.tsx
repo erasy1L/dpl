@@ -1,5 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { ChatSessionSummary } from "../../types/chat.types";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 interface ChatSessionSidebarProps {
   sessions: ChatSessionSummary[];
@@ -21,6 +23,7 @@ export default function ChatSessionSidebar({
   variant,
   onCloseOverlay,
 }: ChatSessionSidebarProps) {
+  useLocale();
   const wrapCls =
     variant === "overlay"
       ? "absolute left-0 top-0 bottom-0 z-[59] w-[min(260px,88vw)] flex flex-col border-r border-gray-200 bg-white shadow-lg"
@@ -30,7 +33,7 @@ export default function ChatSessionSidebar({
     <div className={wrapCls}>
       <div className="shrink-0 border-b border-gray-100 px-2 py-2">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-          Chats
+          {m.chat_list_title()}
         </p>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto py-1 px-1">
@@ -47,7 +50,7 @@ export default function ChatSessionSidebar({
         {sessions.map((s) => {
           const active = activeSessionId === s.id;
           const label =
-            s.title?.trim() || "New conversation";
+            s.title?.trim() || m.chat_new_conversation();
           return (
             <div
               key={s.id}
@@ -73,8 +76,8 @@ export default function ChatSessionSidebar({
                   void onDelete(s.id);
                 }}
                 className="shrink-0 rounded-md p-1.5 text-gray-400 opacity-70 hover:bg-transparent hover:text-red-600 md:opacity-0 md:group-hover:opacity-100"
-                aria-label={`Delete ${label}`}
-                title="Delete"
+                aria-label={`${m.chat_delete()} ${label}`}
+                title={m.chat_delete()}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>

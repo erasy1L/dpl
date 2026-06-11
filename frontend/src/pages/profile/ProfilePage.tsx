@@ -37,8 +37,11 @@ import ratingService from "../../services/rating.service";
 import attractionService from "../../services/attraction.service";
 import { formatDate } from "../../utils/formatters";
 import toast from "react-hot-toast";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 const ProfilePage = () => {
+  useLocale();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -141,11 +144,11 @@ const ProfilePage = () => {
     try {
       setSaving(true);
       await userService.updateProfile({ name: editName });
-      toast.success("Profile updated successfully!");
+      toast.success(m.toast_profile_updated());
       setEditModalOpen(false);
       loadProfile();
     } catch (error) {
-      toast.error("Failed to update profile");
+      toast.error(m.toast_profile_update_failed());
     } finally {
       setSaving(false);
     }
@@ -154,10 +157,10 @@ const ProfilePage = () => {
   const handleRemoveFavorite = async (attractionId: number) => {
     try {
       await userService.removeFavorite(attractionId);
-      toast.success("Removed from favorites");
+      toast.success(m.toast_removed_favorites());
       loadFavorites();
     } catch (error) {
-      toast.error("Failed to remove from favorites");
+      toast.error(m.toast_remove_favorites_failed());
     }
   };
 
@@ -178,27 +181,27 @@ const ProfilePage = () => {
 
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmNewPassword) {
-      toast.error("Please fill all password fields");
+      toast.error(m.toast_fill_password_fields());
       return;
     }
     if (newPassword.length < 6) {
-      toast.error("New password must be at least 6 characters");
+      toast.error(m.toast_password_new_min());
       return;
     }
     if (newPassword !== confirmNewPassword) {
-      toast.error("New passwords do not match");
+      toast.error(m.auth_error_passwords_mismatch());
       return;
     }
 
     try {
       setSecuritySaving(true);
       await userService.changePassword(currentPassword, newPassword);
-      toast.success("Password changed successfully");
+      toast.success(m.toast_password_changed());
       setCurrentPassword("");
       setNewPassword("");
       setConfirmNewPassword("");
     } catch (error: any) {
-      toast.error(error?.message || "Failed to change password");
+      toast.error(error?.message || m.toast_password_change_failed());
     } finally {
       setSecuritySaving(false);
     }
@@ -226,7 +229,7 @@ const ProfilePage = () => {
           leftIcon={<Edit className="w-4 h-4" />}
           className="absolute top-4 right-4 bg-white/90 hover:bg-white"
         >
-          Edit Profile
+          {m.profile_edit()}
         </Button>
       </div>
 
@@ -251,7 +254,7 @@ const ProfilePage = () => {
               {profile?.email || user?.email}
             </p>
             <p className="text-sm text-gray-500">
-              Member since{" "}
+              {m.profile_member_since()}{" "}
               {formatDate(
                 profile?.member_since || new Date().toISOString(),
                 "MMM yyyy"
@@ -266,21 +269,21 @@ const ProfilePage = () => {
               <p className="text-2xl font-bold text-gray-900">
                 {profile?.stats.attractions_visited || 0}
               </p>
-              <p className="text-sm text-gray-600">Visited</p>
+              <p className="text-sm text-gray-600">{m.profile_stat_visited()}</p>
             </div>
             <div className="bg-white p-6 rounded-lg border border-gray-200 text-center">
               <MessageSquare className="w-8 h-8 text-primary-500 mx-auto mb-2" />
               <p className="text-2xl font-bold text-gray-900">
                 {profile?.stats.reviews_written || 0}
               </p>
-              <p className="text-sm text-gray-600">Reviews</p>
+              <p className="text-sm text-gray-600">{m.profile_stat_reviews()}</p>
             </div>
             <div className="bg-white p-6 rounded-lg border border-gray-200 text-center">
               <Star className="w-8 h-8 text-amber-500 mx-auto mb-2" />
               <p className="text-2xl font-bold text-gray-900">
                 {profile?.stats.average_rating.toFixed(1) || "0.0"}
               </p>
-              <p className="text-sm text-gray-600">Avg Rating</p>
+              <p className="text-sm text-gray-600">{m.profile_stat_avg_rating()}</p>
             </div>
           </div>
         </div>
@@ -293,11 +296,11 @@ const ProfilePage = () => {
           className="mt-8"
         >
           <TabList>
-            <Tab id="ratings">My Ratings ({ratings.length})</Tab>
-            <Tab id="favorites">Favorites ({favorites.length})</Tab>
-            <Tab id="activity">Activity</Tab>
-            <Tab id="preferences">Preferences</Tab>
-            <Tab id="security">Security</Tab>
+            <Tab id="ratings">{m.profile_tab_ratings({ count: ratings.length })}</Tab>
+            <Tab id="favorites">{m.profile_tab_favorites({ count: favorites.length })}</Tab>
+            <Tab id="activity">{m.profile_tab_activity()}</Tab>
+            <Tab id="preferences">{m.profile_tab_preferences()}</Tab>
+            <Tab id="security">{m.profile_tab_security()}</Tab>
           </TabList>
 
           {/* Tab 1: My Ratings */}
@@ -331,10 +334,10 @@ const ProfilePage = () => {
             ) : filteredRatings.length === 0 ? (
               <EmptyState
                 icon={<Star className="w-16 h-16" />}
-                title="No ratings yet"
-                description="Start exploring and rating attractions to see them here."
+                title={m.profile_no_ratings_title()}
+                description={m.profile_no_ratings_desc()}
                 action={{
-                  label: "Explore Attractions",
+                  label: m.profile_explore_attractions(),
                   onClick: () => (window.location.href = "/attractions"),
                 }}
               />
@@ -348,7 +351,7 @@ const ProfilePage = () => {
                       if (
                         confirm("Are you sure you want to delete this rating?")
                       ) {
-                        toast.success("Rating deleted");
+                        toast.success(m.toast_rating_deleted());
                         loadRatings();
                       }
                     }}
@@ -369,10 +372,10 @@ const ProfilePage = () => {
             ) : favorites.length === 0 ? (
               <EmptyState
                 icon={<Heart className="w-16 h-16" />}
-                title="No favorites yet"
-                description="Add attractions to your favorites to see them here."
+                title={m.profile_no_favorites_title()}
+                description={m.profile_no_favorites_desc()}
                 action={{
-                  label: "Explore Attractions",
+                  label: m.profile_explore_attractions(),
                   onClick: () => (window.location.href = "/attractions"),
                 }}
               />
@@ -404,8 +407,8 @@ const ProfilePage = () => {
             ) : activity.length === 0 ? (
               <EmptyState
                 icon={<Eye className="w-16 h-16" />}
-                title="No activity yet"
-                description="Your activity will appear here as you explore attractions."
+                title={m.profile_no_activity_title()}
+                description={m.profile_no_activity_desc()}
               />
             ) : (
               <div className="space-y-4">
@@ -420,7 +423,7 @@ const ProfilePage = () => {
           <TabPanel id="preferences">
             <div className="max-w-2xl">
               <PreferencesCard
-                onUpdate={() => toast.success("Preferences updated!")}
+                onUpdate={() => toast.success(m.toast_preferences_updated())}
               />
             </div>
           </TabPanel>
@@ -432,7 +435,7 @@ const ProfilePage = () => {
                 <div className="flex items-center gap-2 mb-6">
                   <Shield className="w-5 h-5 text-primary-500" />
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Security
+                    {m.profile_security_title()}
                   </h3>
                 </div>
 
@@ -466,7 +469,7 @@ const ProfilePage = () => {
                     onClick={handleChangePassword}
                     isLoading={securitySaving}
                   >
-                    Update Password
+                    {m.profile_update_password()}
                   </Button>
                 </div>
               </div>
@@ -479,7 +482,7 @@ const ProfilePage = () => {
       <Modal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
-        title="Edit Profile"
+        title={m.profile_edit()}
         size="sm"
       >
         <div className="space-y-4">
@@ -501,7 +504,7 @@ const ProfilePage = () => {
             onClick={handleUpdateProfile}
             isLoading={saving}
           >
-            Save Changes
+            {m.save_changes()}
           </Button>
         </div>
       </Modal>

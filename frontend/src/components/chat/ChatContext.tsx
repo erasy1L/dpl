@@ -12,6 +12,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import chatService from "../../services/chat.service";
 import { ChatMessage, ChatSessionSummary } from "../../types/chat.types";
 import toast from "react-hot-toast";
+import * as m from "../../paraglide/messages.js";
 
 const STORAGE_KEY = "tourkz_chat_session_id";
 
@@ -79,7 +80,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         setMessages([]);
       }
     } catch {
-      toast.error("Could not load conversations");
+      toast.error(m.toast_chat_load_conversations_failed());
     } finally {
       setIsSessionsLoading(false);
     }
@@ -118,12 +119,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem(STORAGE_KEY);
         setSessionId(null);
         setMessages([]);
-        toast.error("Chat session not found");
+        toast.error(m.toast_chat_session_not_found());
         if (isAuthenticated) {
           void reconcileAuthSessions();
         }
       } else {
-        toast.error("Could not load chat history");
+        toast.error(m.toast_chat_history_failed());
       }
     } finally {
       setIsHistoryLoading(false);
@@ -162,7 +163,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
       } catch (e: unknown) {
         const err = e as { message?: string };
-        toast.error(err?.message || "Could not delete chat");
+        toast.error(err?.message || m.toast_chat_delete_failed());
       }
     },
     [sessionId],
@@ -213,7 +214,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
       } catch (e: unknown) {
         const err = e as { message?: string };
-        toast.error(err?.message || "Failed to send message");
+        toast.error(err?.message || m.toast_chat_send_failed());
         setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
       } finally {
         setIsLoading(false);
@@ -241,7 +242,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch {
-      toast.error("Could not start a new chat");
+      toast.error(m.toast_chat_new_failed());
     } finally {
       setIsCreatingSession(false);
     }

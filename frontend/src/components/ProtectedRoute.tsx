@@ -1,6 +1,8 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Spinner } from "./ui";
+import { useLocale } from "../contexts/LocaleContext";
+import * as m from "../paraglide/messages.js";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,13 +13,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   allowedRoles,
 }) => {
+  useLocale();
   const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
         <Spinner size="lg" />
-        <p className="mt-4 text-gray-600">Loading...</p>
+        <p className="mt-4 text-gray-600">{m.loading()}</p>
       </div>
     );
   }

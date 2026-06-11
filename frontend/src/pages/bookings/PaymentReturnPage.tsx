@@ -4,10 +4,13 @@ import Container from "../../components/layout/Container";
 import { Button } from "../../components/ui";
 import bookingService from "../../services/booking.service";
 import toast from "react-hot-toast";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const PaymentReturnPage = () => {
+  useLocale();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -20,7 +23,7 @@ const PaymentReturnPage = () => {
 
     const checkoutId = searchParams.get("checkout_id");
     if (!checkoutId) {
-      setErrMsg("Missing checkout. Return to your booking and try again.");
+      setErrMsg(m.payment_missing_checkout());
       setLoading(false);
       return;
     }
@@ -31,7 +34,7 @@ const PaymentReturnPage = () => {
       for (let i = 0; i < maxAttempts; i++) {
         try {
           await bookingService.syncPaymentAfterReturn(checkoutId);
-          toast.success("Payment confirmed");
+          toast.success(m.toast_payment_confirmed());
           navigate("/bookings", { replace: true });
           return;
         } catch (e: unknown) {
@@ -52,7 +55,7 @@ const PaymentReturnPage = () => {
         }
       }
       setErrMsg(lastError || "Could not confirm payment");
-      toast.error(lastError || "Could not confirm payment");
+      toast.error(lastError || m.toast_payment_confirm_failed());
       setLoading(false);
     })();
   }, [navigate, searchParams]);
@@ -62,12 +65,9 @@ const PaymentReturnPage = () => {
       <div className="min-h-[50vh] flex items-center justify-center bg-gray-50">
         <Container size="md" className="text-center py-16 space-y-4">
           <p className="text-red-700">{errMsg}</p>
-          <p className="text-sm text-gray-600">
-            If you were charged, your booking may still update in a few moments—check
-            My bookings.
-          </p>
+          <p className="text-sm text-gray-600">{m.payment_charge_notice()}</p>
           <Button variant="primary" onClick={() => navigate("/bookings")}>
-            My bookings
+            {m.bookings_title()}
           </Button>
         </Container>
       </div>
@@ -78,7 +78,7 @@ const PaymentReturnPage = () => {
     return (
       <div className="min-h-[50vh] flex items-center justify-center bg-gray-50">
         <Container size="md" className="text-center py-16">
-          <p className="text-gray-700">Confirming your payment…</p>
+          <p className="text-gray-700">{m.payment_confirming()}</p>
         </Container>
       </div>
     );

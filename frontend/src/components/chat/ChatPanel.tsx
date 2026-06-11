@@ -4,6 +4,8 @@ import { useChat } from "./ChatContext";
 import { AssistantMessageContent } from "./parseAssistantContent";
 import SuggestedPrompts from "./SuggestedPrompts";
 import ChatSessionSidebar from "./ChatSessionSidebar";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 function TypingIndicator() {
   return (
@@ -16,6 +18,7 @@ function TypingIndicator() {
 }
 
 export default function ChatPanel() {
+  useLocale();
   const {
     isOpen,
     toggleChat,
@@ -80,7 +83,7 @@ export default function ChatPanel() {
             : "md:w-[min(400px,calc(100dvw-3rem))]"
         }`}
         role="dialog"
-        aria-label="TourKZ Assistant chat"
+        aria-label={m.chat_aria_dialog()}
       >
         <div className="relative flex h-full w-full flex-row overflow-hidden rounded-t-2xl border border-gray-200 bg-white shadow-2xl md:rounded-2xl">
         {showConversationList && (
@@ -99,7 +102,7 @@ export default function ChatPanel() {
             <button
               type="button"
               className="absolute inset-0 z-[56] bg-black/25 md:hidden"
-              aria-label="Close chat list"
+              aria-label={m.chat_close()}
               onClick={() => setMobileSessionsOpen(false)}
             />
             <ChatSessionSidebar
@@ -122,7 +125,7 @@ export default function ChatPanel() {
                   type="button"
                   onClick={() => setMobileSessionsOpen((o) => !o)}
                   className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800 md:hidden"
-                  aria-label="Conversations"
+                  aria-label={m.chat_list_title()}
                   aria-expanded={mobileSessionsOpen}
                 >
                   <List className="h-5 w-5" />
@@ -131,7 +134,7 @@ export default function ChatPanel() {
               <div className="flex min-w-0 items-center gap-2">
                 <Sparkles className="h-5 w-5 shrink-0 text-amber-500" />
                 <h2 className="truncate text-sm font-semibold text-gray-900">
-                  TourKZ Assistant
+                  {m.chat_title()}
                 </h2>
                 {(isCreatingSession || isHistoryLoading) && (
                   <Loader2
@@ -147,8 +150,8 @@ export default function ChatPanel() {
                 onClick={() => newSession()}
                 disabled={isCreatingSession || isHistoryLoading}
                 className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800 disabled:pointer-events-none disabled:opacity-40"
-                title="New chat"
-                aria-label="New chat"
+                title={m.chat_new()}
+                aria-label={m.chat_new()}
               >
                 <Plus className="h-5 w-5" />
               </button>
@@ -156,7 +159,7 @@ export default function ChatPanel() {
                 type="button"
                 onClick={toggleChat}
                 className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
-                aria-label="Close"
+                aria-label={m.chat_close()}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -171,8 +174,8 @@ export default function ChatPanel() {
                 <div className="h-3 w-5/6 animate-pulse rounded bg-gray-200" />
                 <p className="pt-2 text-xs text-gray-500">
                   {isCreatingSession
-                    ? "Starting new chat…"
-                    : "Loading conversation…"}
+                    ? m.chat_starting()
+                    : m.chat_loading()}
                 </p>
               </div>
             )}
@@ -183,22 +186,22 @@ export default function ChatPanel() {
                 }}
               />
             )}
-            {messages.map((m) => (
+            {messages.map((message) => (
               <div
-                key={m.id}
-                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                key={message.id}
+                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
                   className={`max-w-[90%] rounded-2xl px-3 py-2 ${
-                    m.role === "user"
+                    message.role === "user"
                       ? "rounded-br-md bg-primary-500 text-white"
                       : "rounded-bl-md bg-gray-100 text-gray-900"
                   }`}
                 >
-                  {m.role === "user" ? (
-                    <p className="whitespace-pre-wrap text-sm">{m.content}</p>
+                  {message.role === "user" ? (
+                    <p className="whitespace-pre-wrap text-sm">{message.content}</p>
                   ) : (
-                    <AssistantMessageContent content={m.content} />
+                    <AssistantMessageContent content={message.content} />
                   )}
                 </div>
               </div>
@@ -227,7 +230,7 @@ export default function ChatPanel() {
                   void handleSend();
                 }
               }}
-              placeholder="Ask about Kazakhstan…"
+              placeholder={m.chat_placeholder()}
               className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
               disabled={isLoading}
               autoComplete="off"
@@ -236,7 +239,7 @@ export default function ChatPanel() {
               type="submit"
               disabled={isLoading || !input.trim()}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-500 text-white hover:bg-primary-600 disabled:pointer-events-none disabled:opacity-40"
-              aria-label="Send"
+              aria-label={m.chat_send()}
             >
               <Send className="h-4 w-4" />
             </button>

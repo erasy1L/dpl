@@ -15,12 +15,15 @@ import {
 import attractionService from "../../services/attraction.service";
 import { getLocalizedText } from "../../utils/localization";
 import toast from "react-hot-toast";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 const ITEMS_PER_PAGE = 15;
 
 type SortOption = "popular" | "rating" | "name" | "recent";
 
 const ExplorePage = () => {
+  useLocale();
   const [searchParams, setSearchParams] = useSearchParams();
   const [attractions, setAttractions] = useState<Attraction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,7 +105,7 @@ const ExplorePage = () => {
       } catch (error) {
         if (cancelled) return;
         console.error("Failed to load attractions:", error);
-        toast.error("Failed to load attractions. Please try again.");
+        toast.error(m.toast_load_attractions_failed());
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -204,11 +207,9 @@ const ExplorePage = () => {
             {/* Header */}
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Explore Attractions
+                {m.explore_title()}
               </h1>
-              <p className="text-gray-600">
-                Discover amazing places across Kazakhstan
-              </p>
+              <p className="text-gray-600">{m.explore_subtitle()}</p>
             </div>
 
             {/* Search and Sort Bar */}
@@ -220,7 +221,7 @@ const ExplorePage = () => {
                 onClick={() => setShowMobileFilters(true)}
                 leftIcon={<Filter className="w-5 h-5" />}
               >
-                Filters
+                {m.filters()}
                 {activeFilterCount > 0 && (
                   <Badge variant="primary" size="sm" className="ml-2">
                     {activeFilterCount}
@@ -243,17 +244,19 @@ const ExplorePage = () => {
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
                 className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
               >
-                <option value="popular">Most Popular</option>
-                <option value="rating">Highest Rated</option>
-                <option value="name">Name (A-Z)</option>
-                <option value="recent">Recently Added</option>
+                <option value="popular">{m.sort_popular()}</option>
+                <option value="rating">{m.sort_rating()}</option>
+                <option value="name">{m.sort_name()}</option>
+                <option value="recent">{m.sort_recent()}</option>
               </select>
             </div>
 
             {/* Results Count */}
             {!loading && (
               <div className="mb-4 text-sm text-gray-600">
-                {total} {total === 1 ? "result" : "results"} found
+                {total === 1
+                  ? m.result_found({ count: total })
+                  : m.results_found({ count: total })}
               </div>
             )}
 
@@ -261,7 +264,7 @@ const ExplorePage = () => {
             <AttractionGrid
               attractions={attractions}
               loading={loading}
-              emptyMessage="No attractions match your criteria"
+              emptyMessage={m.no_results()}
             />
 
             {/* Pagination */}
@@ -274,7 +277,7 @@ const ExplorePage = () => {
                   disabled={currentPage === 1}
                   leftIcon={<ChevronLeft className="w-4 h-4" />}
                 >
-                  Previous
+                  {m.previous()}
                 </Button>
 
                 <div className="flex gap-1">
@@ -313,7 +316,7 @@ const ExplorePage = () => {
                   disabled={currentPage === totalPages}
                   rightIcon={<ChevronRight className="w-4 h-4" />}
                 >
-                  Next
+                  {m.next()}
                 </Button>
               </div>
             )}

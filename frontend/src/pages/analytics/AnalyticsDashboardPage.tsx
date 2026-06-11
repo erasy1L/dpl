@@ -20,8 +20,11 @@ import {
 } from "../../types/analytics.types";
 import analyticsService from "../../services/analytics.service";
 import { formatRelativeTime } from "../../utils/formatters";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 const AnalyticsDashboardPage = () => {
+  useLocale();
   const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
   const [viewsOverTime, setViewsOverTime] = useState<TimeSeriesData[]>([]);
   const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
@@ -92,27 +95,27 @@ const AnalyticsDashboardPage = () => {
   }));
 
   const viewsColumns = [
-    { key: "name", label: "Attraction", sortable: true },
-    { key: "city", label: "City", sortable: true },
+    { key: "name", label: m.table_attraction(), sortable: true },
+    { key: "city", label: m.table_city(), sortable: true },
     {
       key: "views",
-      label: "Views",
+      label: m.table_views(),
       sortable: true,
       render: (val: number) => val.toLocaleString(),
     },
-    { key: "trend", label: "Trend", sortable: true },
+    { key: "trend", label: m.table_trend(), sortable: true },
   ];
 
   const ratingColumns = [
-    { key: "name", label: "Attraction", sortable: true },
-    { key: "city", label: "City", sortable: true },
+    { key: "name", label: m.table_attraction(), sortable: true },
+    { key: "city", label: m.table_city(), sortable: true },
     {
       key: "rating",
-      label: "Rating",
+      label: m.table_rating(),
       sortable: true,
       render: (val: number) => `${val.toFixed(1)} ⭐`,
     },
-    { key: "reviewCount", label: "Reviews", sortable: true },
+    { key: "reviewCount", label: m.table_reviews(), sortable: true },
   ];
 
   return (
@@ -122,12 +125,12 @@ const AnalyticsDashboardPage = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Tourism Analytics Dashboard
+              {m.analytics_title()}
             </h1>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Clock className="w-4 h-4" />
               <span>
-                Last updated {formatRelativeTime(lastUpdated.toISOString())}
+                {m.analytics_last_updated({ time: formatRelativeTime(lastUpdated.toISOString()) })}
               </span>
             </div>
           </div>
@@ -142,14 +145,14 @@ const AnalyticsDashboardPage = () => {
                 />
               }
             >
-              {autoRefresh ? "Auto-refreshing" : "Auto-refresh"}
+              {autoRefresh ? m.analytics_auto_refresh_on() : m.analytics_auto_refresh_off()}
             </Button>
             <Button
               variant="outline"
               onClick={loadAllData}
               leftIcon={<RefreshCw className="w-4 h-4" />}
             >
-              Refresh Now
+              {m.analytics_refresh_now()}
             </Button>
           </div>
         </div>
@@ -165,14 +168,14 @@ const AnalyticsDashboardPage = () => {
           ) : (
             <>
               <MetricCard
-                title="Total Attractions"
+                title={m.analytics_total_attractions()}
                 value={overview?.total_attractions || 0}
                 icon={<MapPin className="w-6 h-6" />}
                 change={overview?.trends.views}
                 trend="up"
               />
               <MetricCard
-                title="Total Views"
+                title={m.analytics_total_views()}
                 value={overview?.total_views || 0}
                 icon={<Eye className="w-6 h-6" />}
                 change={overview?.trends.views}
@@ -183,7 +186,7 @@ const AnalyticsDashboardPage = () => {
                 }
               />
               <MetricCard
-                title="Average Rating"
+                title={m.analytics_average_rating()}
                 value={overview?.average_rating.toFixed(1) || "0.0"}
                 icon={<Star className="w-6 h-6" />}
                 change={overview?.trends.ratings}
@@ -194,7 +197,7 @@ const AnalyticsDashboardPage = () => {
                 }
               />
               <MetricCard
-                title="Active Users"
+                title={m.analytics_active_users()}
                 value={overview?.active_users || 0}
                 icon={<Users className="w-6 h-6" />}
                 change={overview?.trends.users}
@@ -212,7 +215,7 @@ const AnalyticsDashboardPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Views Over Time
+              {m.analytics_views_over_time()}
             </h2>
             {loading ? (
               <Skeleton variant="rectangular" height={300} />
@@ -229,7 +232,7 @@ const AnalyticsDashboardPage = () => {
 
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Category Distribution
+              {m.analytics_category_distribution()}
             </h2>
             {loading ? (
               <Skeleton variant="rectangular" height={300} />
@@ -248,7 +251,7 @@ const AnalyticsDashboardPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
-              City Comparison
+              {m.analytics_city_comparison()}
             </h2>
             {loading ? (
               <Skeleton variant="rectangular" height={300} />
@@ -271,7 +274,7 @@ const AnalyticsDashboardPage = () => {
 
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Rating Distribution
+              {m.analytics_rating_distribution()}
             </h2>
             {loading ? (
               <Skeleton variant="rectangular" height={300} />
@@ -296,7 +299,7 @@ const AnalyticsDashboardPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Top Attractions by Views
+              {m.analytics_top_by_views()}
             </h2>
             {loading ? (
               <Skeleton variant="rectangular" height={400} />
@@ -307,7 +310,7 @@ const AnalyticsDashboardPage = () => {
 
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Top Attractions by Rating
+              {m.analytics_top_by_rating()}
             </h2>
             {loading ? (
               <Skeleton variant="rectangular" height={400} />

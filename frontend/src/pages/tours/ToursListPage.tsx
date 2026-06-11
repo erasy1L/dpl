@@ -7,17 +7,26 @@ import tourService from "../../services/tour.service";
 import companyService from "../../services/company.service";
 import { Tour, TourCompany, TourDifficulty } from "../../types/tour.types";
 import { getLocalizedText } from "../../utils/localization";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 const ITEMS_PER_PAGE = 12;
 
-const difficultyLabels: Record<TourDifficulty, string> = {
-  easy: "Easy",
-  moderate: "Moderate",
-  hard: "Hard",
-  extreme: "Extreme",
+const difficultyLabel = (difficulty: TourDifficulty) => {
+  switch (difficulty) {
+    case "easy":
+      return m.tour_difficulty_easy();
+    case "moderate":
+      return m.tour_difficulty_moderate();
+    case "hard":
+      return m.tour_difficulty_hard();
+    case "extreme":
+      return m.tour_difficulty_extreme();
+  }
 };
 
 const ToursListPage = () => {
+  useLocale();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -126,7 +135,7 @@ const ToursListPage = () => {
               <div className="flex items-center gap-2 mb-4">
                 <SlidersHorizontal className="w-5 h-5 text-primary-500" />
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Filters
+                  {m.tours_filters()}
                 </h2>
                 {activeFilters > 0 && (
                   <Badge variant="primary" size="sm" className="ml-auto">
@@ -137,23 +146,23 @@ const ToursListPage = () => {
 
               <div className="space-y-4">
                 <Input
-                  label="City"
+                  label={m.tours_filter_city()}
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   leftIcon={<MapPin className="w-4 h-4" />}
-                  placeholder="Almaty, Astana..."
+                  placeholder={m.tours_city_placeholder()}
                 />
 
                 <div className="grid grid-cols-2 gap-3">
                   <Input
-                    label="Min price"
+                    label={m.tours_min_price()}
                     type="number"
                     value={minPrice}
                     onChange={(e) => setMinPrice(e.target.value)}
                     placeholder="0"
                   />
                   <Input
-                    label="Max price"
+                    label={m.tours_max_price()}
                     type="number"
                     value={maxPrice}
                     onChange={(e) => setMaxPrice(e.target.value)}
@@ -163,7 +172,7 @@ const ToursListPage = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Company
+                    {m.tours_filter_company()}
                   </label>
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
@@ -174,7 +183,7 @@ const ToursListPage = () => {
                       )
                     }
                   >
-                    <option value="">Any company</option>
+                    <option value="">{m.tours_any_company()}</option>
                     {!loadingCompanies &&
                       companies.map((c) => (
                         <option key={c.id} value={c.id}>
@@ -186,7 +195,7 @@ const ToursListPage = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Difficulty
+                    {m.tours_filter_difficulty()}
                   </label>
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
@@ -195,16 +204,16 @@ const ToursListPage = () => {
                       setDifficulty(e.target.value as TourDifficulty | "")
                     }
                   >
-                    <option value="">Any</option>
-                    <option value="easy">Easy</option>
-                    <option value="moderate">Moderate</option>
-                    <option value="hard">Hard</option>
-                    <option value="extreme">Extreme</option>
+                    <option value="">{m.tours_any()}</option>
+                    <option value="easy">{m.tour_difficulty_easy()}</option>
+                    <option value="moderate">{m.tour_difficulty_moderate()}</option>
+                    <option value="hard">{m.tour_difficulty_hard()}</option>
+                    <option value="extreme">{m.tour_difficulty_extreme()}</option>
                   </select>
                 </div>
 
                 <Button variant="outline" fullWidth onClick={handleReset}>
-                  Reset filters
+                  {m.tours_reset_filters()}
                 </Button>
               </div>
             </div>
@@ -214,16 +223,16 @@ const ToursListPage = () => {
           <main className="flex-1 min-w-0">
             <header className="mb-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-1">
-                Tours
+                {m.tours_title()}
               </h1>
-              <p className="text-gray-600">
-                Discover guided tours and experiences across Kazakhstan.
-              </p>
+              <p className="text-gray-600">{m.tours_subtitle()}</p>
             </header>
 
             {!loading && (
               <p className="text-sm text-gray-600 mb-4">
-                {total} {total === 1 ? "tour" : "tours"} found
+                {total === 1
+                  ? m.tours_count_one({ count: total })
+                  : m.tours_count_many({ count: total })}
               </p>
             )}
 
@@ -235,8 +244,8 @@ const ToursListPage = () => {
               </div>
             ) : tours.length === 0 ? (
               <EmptyState
-                title="No tours found"
-                description="Try adjusting your filters or exploring another city."
+                title={m.tours_empty_title()}
+                description={m.tours_empty_desc()}
               />
             ) : (
               <>
@@ -280,7 +289,11 @@ const ToursListPage = () => {
                             {companyName}
                           </p>
                           <div className="flex items-center justify-between text-sm text-gray-600 mt-2">
-                            <span>{tour.duration_days > 0 ? `${tour.duration_days} days` : `${tour.duration_hours} hours`}</span>
+                            <span>
+                              {tour.duration_days > 0
+                                ? m.duration_days({ count: tour.duration_days })
+                                : m.duration_hours({ count: tour.duration_hours })}
+                            </span>
                             <span className="font-semibold text-primary-600">
                               {tour.price.toLocaleString()} {tour.currency}
                             </span>
@@ -292,7 +305,7 @@ const ToursListPage = () => {
                             </span>
                             {difficulty && (
                               <Badge variant="neutral" size="sm">
-                                {difficultyLabels[tour.difficulty]}
+                                {difficultyLabel(tour.difficulty)}
                               </Badge>
                             )}
                           </div>
@@ -310,10 +323,10 @@ const ToursListPage = () => {
                       onClick={() => handlePageChange(page - 1)}
                       disabled={page === 1}
                     >
-                      Previous
+                      {m.previous()}
                     </Button>
                     <span className="text-sm text-gray-600">
-                      Page {page} of {totalPages}
+                      {m.pagination_page_of({ page, total: totalPages })}
                     </span>
                     <Button
                       variant="outline"
@@ -321,7 +334,7 @@ const ToursListPage = () => {
                       onClick={() => handlePageChange(page + 1)}
                       disabled={page === totalPages}
                     >
-                      Next
+                      {m.next()}
                     </Button>
                   </div>
                 )}
@@ -335,4 +348,3 @@ const ToursListPage = () => {
 };
 
 export default ToursListPage;
-

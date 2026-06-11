@@ -13,34 +13,46 @@ import bookingService from "../../services/booking.service";
 import { Booking } from "../../types/booking.types";
 import { getLocalizedText } from "../../utils/localization";
 import toast from "react-hot-toast";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 const statusColors: Record<
   Booking["status"],
-  { bg: string; text: string; label: string }
+  { bg: string; text: string }
 > = {
   pending: {
     bg: "bg-amber-50",
     text: "text-amber-700",
-    label: "Pending",
   },
   confirmed: {
     bg: "bg-emerald-50",
     text: "text-emerald-700",
-    label: "Confirmed",
   },
   cancelled: {
     bg: "bg-red-50",
     text: "text-red-700",
-    label: "Cancelled",
   },
   completed: {
     bg: "bg-gray-100",
     text: "text-gray-700",
-    label: "Completed",
   },
 };
 
+const statusLabel = (status: Booking["status"]) => {
+  switch (status) {
+    case "pending":
+      return m.booking_status_pending();
+    case "confirmed":
+      return m.booking_status_confirmed();
+    case "cancelled":
+      return m.booking_status_cancelled();
+    case "completed":
+      return m.booking_status_completed();
+  }
+};
+
 const MyBookingsPage = () => {
+  useLocale();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [payingBookingId, setPayingBookingId] = useState<string | null>(null);
@@ -64,7 +76,7 @@ const MyBookingsPage = () => {
   }, [limit, offset]);
 
   const handleCancel = async (id: string) => {
-    if (!confirm("Cancel this booking? Available spots will be released.")) {
+    if (!confirm(m.confirm_cancel_booking())) {
       return;
     }
     try {
@@ -72,10 +84,10 @@ const MyBookingsPage = () => {
       setBookings((prev) =>
         prev.map((b) => (b.id === updated.id ? updated : b)),
       );
-      toast.success("Booking cancelled");
+      toast.success(m.toast_booking_cancelled());
     } catch (error: any) {
       console.error("Failed to cancel booking:", error);
-      toast.error(error?.message || "Failed to cancel booking");
+      toast.error(error?.message || m.toast_cancel_failed());
     }
   };
 
@@ -86,7 +98,7 @@ const MyBookingsPage = () => {
       window.location.href = checkoutUrl;
     } catch (error: any) {
       console.error("Failed to start checkout:", error);
-      toast.error(error?.message || "Could not start payment");
+      toast.error(error?.message || m.toast_payment_start_failed());
       setPayingBookingId(null);
     }
   };
@@ -96,11 +108,9 @@ const MyBookingsPage = () => {
       <Container size="lg">
         <header className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-1">
-            My bookings
+            {m.bookings_title()}
           </h1>
-          <p className="text-gray-600">
-            View and manage your tour bookings.
-          </p>
+          <p className="text-gray-600">{m.bookings_subtitle()}</p>
         </header>
 
         {loading ? (
@@ -111,10 +121,10 @@ const MyBookingsPage = () => {
           </div>
         ) : bookings.length === 0 ? (
           <EmptyState
-            title="No bookings yet"
-            description="When you book a tour, it will appear here."
+            title={m.bookings_empty_title()}
+            description={m.bookings_empty_desc()}
             action={{
-              label: "Browse tours",
+              label: m.bookings_browse_tours(),
               onClick: () => navigate("/tours"),
             }}
           />
@@ -142,7 +152,7 @@ const MyBookingsPage = () => {
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                       <div className="flex items-center gap-2">
                         <h2 className="font-semibold text-gray-900">
-                          {tourName || "Tour"}
+                          {tourName || m.booking_fallback_tour()}
                         </h2>
                         <span
                           className={`px-2 py-0.5 rounded-full text-xs font-medium inline-flex items-center gap-1 ${status.bg} ${status.text}`}
@@ -153,11 +163,11 @@ const MyBookingsPage = () => {
                           {b.status === "cancelled" && (
                             <XCircle className="w-3 h-3" />
                           )}
-                          {status.label}
+                          {statusLabel(b.status)}
                         </span>
                       </div>
                       <p className="text-xs text-gray-500">
-                        Booked on{" "}
+                        {m.booking_booked_on()}{" "}
                         {new Date(b.created_at).toLocaleDateString()}
                       </p>
                     </div>
@@ -190,7 +200,9 @@ const MyBookingsPage = () => {
                       <span className="inline-flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {b.number_of_people}{" "}
-                        {b.number_of_people === 1 ? "person" : "people"}
+                        {b.number_of_people === 1
+                          ? m.booking_person_one()
+                          : m.booking_people_many()}
                       </span>
                     </div>
                   </div>
@@ -204,7 +216,7 @@ const MyBookingsPage = () => {
                         </span>
                       </div>
                       <p className="text-xs text-gray-500">
-                        Contact: {b.contact_email}
+                        {m.booking_contact()} {b.contact_email}
                       </p>
                     </div>
 
@@ -214,7 +226,7 @@ const MyBookingsPage = () => {
                         size="sm"
                         onClick={() => navigate(`/tours/${b.tour_id}`)}
                       >
-                        View tour
+                        {m.booking_view_tour()}
                       </Button>
                       {b.status === "pending" && (
                         <Button
@@ -224,7 +236,7 @@ const MyBookingsPage = () => {
                           disabled={payingBookingId !== null && payingBookingId !== b.id}
                           onClick={() => handlePay(b.id)}
                         >
-                          Pay
+                          {m.booking_pay()}
                         </Button>
                       )}
                       {(b.status === "pending" || b.status === "confirmed") && (
@@ -233,7 +245,7 @@ const MyBookingsPage = () => {
                           size="sm"
                           onClick={() => handleCancel(b.id)}
                         >
-                          Cancel
+                          {m.booking_cancel()}
                         </Button>
                       )}
                     </div>
@@ -249,4 +261,3 @@ const MyBookingsPage = () => {
 };
 
 export default MyBookingsPage;
-

@@ -1,11 +1,14 @@
 import { useState, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLocale } from "../../contexts/LocaleContext";
 import { Mail, Lock, Compass, CheckCircle2, Home } from "lucide-react";
 import { Input, Button } from "../../components/ui";
 import toast from "react-hot-toast";
+import * as m from "../../paraglide/messages.js";
 
 const LoginPage = () => {
+  useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -20,13 +23,13 @@ const LoginPage = () => {
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email) {
-      newErrors.email = "Email is required";
+      newErrors.email = m.auth_error_email_required();
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = m.auth_error_email_invalid();
     }
 
     if (!password) {
-      newErrors.password = "Password is required";
+      newErrors.password = m.auth_error_password_required();
     }
 
     setErrors(newErrors);
@@ -42,10 +45,10 @@ const LoginPage = () => {
 
     try {
       await login({ email, password });
-      toast.success("Welcome back!");
+      toast.success(m.toast_welcome_back());
       navigate("/attractions");
     } catch (err: any) {
-      toast.error(err.message || "Login failed. Please try again.");
+      toast.error(err.message || m.toast_login_failed());
     }
   };
 
@@ -60,7 +63,7 @@ const LoginPage = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 transition-all mb-6"
           >
             <Home className="w-4 h-4" />
-            <span className="font-medium">Back to Home</span>
+            <span className="font-medium">{m.auth_back_to_home()}</span>
           </Link>
 
           {/* Logo */}
@@ -73,9 +76,11 @@ const LoginPage = () => {
 
           {/* Header */}
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
+            <h2 className="text-3xl font-bold text-gray-900">
+              {m.auth_welcome_back()}
+            </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Sign in to continue your journey
+              {m.auth_sign_in_subtitle()}
             </p>
           </div>
 
@@ -83,7 +88,7 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
             <div className="space-y-4">
               <Input
-                label="Email Address"
+                label={m.auth_email_label()}
                 type="email"
                 value={email}
                 onChange={(e) => {
@@ -92,12 +97,12 @@ const LoginPage = () => {
                 }}
                 error={errors.email}
                 leftIcon={<Mail className="w-5 h-5" />}
-                placeholder="you@example.com"
+                placeholder={m.auth_email_placeholder()}
                 disabled={isLoading}
               />
 
               <Input
-                label="Password"
+                label={m.auth_password_label()}
                 type="password"
                 value={password}
                 onChange={(e) => {
@@ -106,7 +111,7 @@ const LoginPage = () => {
                 }}
                 error={errors.password}
                 leftIcon={<Lock className="w-5 h-5" />}
-                placeholder="••••••••"
+                placeholder={m.auth_password_placeholder()}
                 disabled={isLoading}
               />
             </div>
@@ -124,7 +129,7 @@ const LoginPage = () => {
                   htmlFor="remember-me"
                   className="ml-2 block text-sm text-gray-700"
                 >
-                  Remember me
+                  {m.auth_remember_me()}
                 </label>
               </div>
 
@@ -132,7 +137,7 @@ const LoginPage = () => {
                 to="/forgot-password"
                 className="text-sm font-medium text-primary-600 hover:text-primary-500"
               >
-                Forgot password?
+                {m.auth_forgot_password()}
               </Link>
             </div>
 
@@ -144,23 +149,23 @@ const LoginPage = () => {
               isLoading={isLoading}
               className="bg-linear-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-xl transition-all"
             >
-              {isLoading ? "Signing In..." : "Sign In to Continue"}
+              {isLoading ? m.auth_signing_in() : m.auth_sign_in_button()}
             </Button>
 
             <p className="text-xs text-center text-gray-500 mt-2">
-              Press Enter or click to sign in
+              {m.auth_enter_hint()}
             </p>
           </form>
 
           {/* Sign Up Link */}
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{" "}
+              {m.auth_no_account()}{" "}
               <Link
                 to="/register"
                 className="font-medium text-primary-600 hover:text-primary-500"
               >
-                Sign up
+                {m.auth_sign_up_link()}
               </Link>
             </p>
           </div>
@@ -181,38 +186,37 @@ const LoginPage = () => {
 
         <div className="relative z-10 flex flex-col justify-center px-12 text-white">
           <h1 className="text-4xl font-bold mb-4">
-            Discover Kazakhstan's Beauty
+            {m.auth_hero_login_title()}
           </h1>
           <p className="text-xl text-white/90 mb-8">
-            Explore stunning landscapes, rich culture, and unforgettable
-            experiences across Kazakhstan
+            {m.auth_hero_login_subtitle()}
           </p>
 
           <div className="space-y-4">
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-6 h-6 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold">Personalized Recommendations</h3>
+                <h3 className="font-semibold">{m.auth_feature_recommendations_title()}</h3>
                 <p className="text-sm text-white/80">
-                  Get attraction suggestions tailored to your preferences
+                  {m.auth_feature_recommendations_desc()}
                 </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-6 h-6 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold">Detailed Information</h3>
+                <h3 className="font-semibold">{m.auth_feature_info_title()}</h3>
                 <p className="text-sm text-white/80">
-                  Access comprehensive guides for every destination
+                  {m.auth_feature_info_desc()}
                 </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-6 h-6 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold">Community Reviews</h3>
+                <h3 className="font-semibold">{m.auth_feature_reviews_title()}</h3>
                 <p className="text-sm text-white/80">
-                  Read authentic reviews from fellow travelers
+                  {m.auth_feature_reviews_desc()}
                 </p>
               </div>
             </div>

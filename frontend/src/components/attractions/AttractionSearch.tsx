@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, X, Loader2 } from "lucide-react";
 import { cn } from "../../utils/cn";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 interface AttractionSearchProps {
   value: string;
@@ -15,6 +17,7 @@ const AttractionSearch = ({
   loading = false,
   className,
 }: AttractionSearchProps) => {
+  useLocale();
   const [internalValue, setInternalValue] = useState(value);
 
   // Track the last value we sent to parent to avoid duplicate calls
@@ -57,7 +60,7 @@ const AttractionSearch = ({
         type="text"
         value={internalValue}
         onChange={(e) => setInternalValue(e.target.value)}
-        placeholder="Search attractions..."
+        placeholder={m.search_attractions_placeholder()}
         className="placeholder:text-gray-100 backdrop-brightness-90 backdrop-blur-lg w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
       />
       <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -66,7 +69,7 @@ const AttractionSearch = ({
           <button
             onClick={handleClear}
             className="absolute right-26 p-1 border border-transparent hover:border-gray-50 rounded-full"
-            aria-label="Clear search"
+            aria-label={m.search_clear()}
           >
             <X className="h-5 w-5 text-gray-100" />
           </button>

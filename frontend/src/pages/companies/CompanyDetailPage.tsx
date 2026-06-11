@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, Globe, Phone, Mail, Star } from "lucide-react";
+import { ArrowLeft, Globe, Phone, Mail, Star } from "lucide-react";
 import Container from "../../components/layout/Container";
 import { Button, Skeleton, EmptyState } from "../../components/ui";
 import companyService from "../../services/company.service";
 import { TourCompany, Tour } from "../../types/tour.types";
 import { getLocalizedText } from "../../utils/localization";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 const CompanyDetailPage = () => {
+  useLocale();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -53,10 +56,10 @@ const CompanyDetailPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <EmptyState
-          title="Company not found"
-          description="This company does not exist or has been removed."
+          title={m.company_not_found_title()}
+          description={m.company_not_found_desc()}
           action={{
-            label: "Back to companies",
+            label: m.company_back_to_companies(),
             onClick: () => navigate("/companies"),
           }}
         />
@@ -79,7 +82,7 @@ const CompanyDetailPage = () => {
           className="inline-flex items-center gap-2 text-sm text-gray-600 mb-4 hover:text-primary-600"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back
+          {m.back()}
         </button>
 
         <div className="bg-white rounded-lg border border-gray-200 p-6 flex flex-col md:flex-row gap-6 mb-8">
@@ -105,7 +108,7 @@ const CompanyDetailPage = () => {
               {company.is_verified && (
                 <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium inline-flex items-center gap-1">
                   <Star className="w-3 h-3" />
-                  Verified operator
+                  {m.company_verified_operator()}
                 </span>
               )}
             </div>
@@ -116,7 +119,10 @@ const CompanyDetailPage = () => {
             </p>
 
             <p className="text-xs text-gray-500 mb-3">
-              {company.total_tours} tours · Rating {company.rating.toFixed(1)}
+              {m.companies_tours_rating({
+                count: company.total_tours,
+                rating: company.rating.toFixed(1),
+              })}
             </p>
 
             <p className="text-gray-700 mb-3">{description}</p>
@@ -128,7 +134,7 @@ const CompanyDetailPage = () => {
                   onClick={() => window.open(company.website!, "_blank")}
                 >
                   <Globe className="w-4 h-4" />
-                  Website
+                  {m.company_website()}
                 </button>
               )}
               {company.phone && (
@@ -150,7 +156,7 @@ const CompanyDetailPage = () => {
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-900">
-              Tours by this company
+              {m.company_tours_section()}
             </h2>
             <Button
               variant="outline"
@@ -159,14 +165,14 @@ const CompanyDetailPage = () => {
                 navigate(`/tours?company_id=${company.id}&city=${encodeURIComponent(city)}`)
               }
             >
-              View in tours list
+              {m.company_view_in_list()}
             </Button>
           </div>
 
           {tours.length === 0 ? (
             <EmptyState
-              title="No tours yet"
-              description="This company has no public tours listed."
+              title={m.company_no_tours_title()}
+              description={m.company_no_tours_desc()}
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -201,8 +207,8 @@ const CompanyDetailPage = () => {
                       <div className="flex items-center justify-between text-sm text-gray-700 mt-1">
                         <span>
                           {tour.duration_days > 0
-                            ? `${tour.duration_days} days`
-                            : `${tour.duration_hours} hours`}
+                            ? m.duration_days({ count: tour.duration_days })
+                            : m.duration_hours({ count: tour.duration_hours })}
                         </span>
                         <span className="font-semibold text-primary-600">
                           {tour.price.toLocaleString()} {tour.currency}
@@ -221,4 +227,3 @@ const CompanyDetailPage = () => {
 };
 
 export default CompanyDetailPage;
-

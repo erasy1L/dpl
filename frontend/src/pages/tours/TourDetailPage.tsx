@@ -9,14 +9,17 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import Container from "../../components/layout/Container";
-import { Button, Badge, Skeleton, EmptyState } from "../../components/ui";
+import { Button, Skeleton, EmptyState } from "../../components/ui";
 import tourService from "../../services/tour.service";
 import { Tour, TourSchedule } from "../../types/tour.types";
 import { getLocalizedText } from "../../utils/localization";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLocale } from "../../contexts/LocaleContext";
 import toast from "react-hot-toast";
+import * as m from "../../paraglide/messages.js";
 
 const TourDetailPage = () => {
+  useLocale();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
@@ -39,7 +42,7 @@ const TourDetailPage = () => {
         if (error?.status === 404) {
           setNotFound(true);
         } else {
-          toast.error("Failed to load tour");
+          toast.error(m.toast_load_tour_failed());
         }
       } finally {
         setLoading(false);
@@ -79,10 +82,10 @@ const TourDetailPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <EmptyState
-          title="Tour not found"
-          description="The tour you are looking for does not exist or has been removed."
+          title={m.tour_not_found_title()}
+          description={m.tour_not_found_desc()}
           action={{
-            label: "Back to tours",
+            label: m.tour_back_to_tours(),
             onClick: () => navigate("/tours"),
           }}
         />
@@ -107,7 +110,7 @@ const TourDetailPage = () => {
 
   const handleBook = (scheduleId: number) => {
     if (!isAuthenticated) {
-      toast.error("Please login to book a tour");
+      toast.error(m.toast_login_to_book());
       navigate("/login");
       return;
     }
@@ -131,7 +134,7 @@ const TourDetailPage = () => {
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 text-white text-sm hover:bg-black/70 w-fit"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back
+            {m.back()}
           </button>
 
           <div className="text-white max-w-3xl pb-4">
@@ -155,18 +158,18 @@ const TourDetailPage = () => {
               {tour.duration_days > 0 ? (
                 <span className="inline-flex items-center gap-1">
                   <Clock className="w-4 h-4" />
-                  {tour.duration_days} days
+                  {m.duration_days({ count: tour.duration_days })}
                   {tour.duration_hours > 0 && ` ${tour.duration_hours}h`}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1">
                   <Clock className="w-4 h-4" />
-                  {tour.duration_hours} hours
+                  {m.duration_hours({ count: tour.duration_hours })}
                 </span>
               )}
               <span className="inline-flex items-center gap-1">
                 <Users className="w-4 h-4" />
-                Up to {tour.max_group_size} people
+                {m.tour_up_to_people({ count: tour.max_group_size })}
               </span>
             </div>
           </div>
@@ -180,7 +183,7 @@ const TourDetailPage = () => {
           <div className="lg:col-span-2 space-y-6">
             <section className="bg-white rounded-lg border border-gray-200 p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-3">
-                About this tour
+                {m.tour_about_title()}
               </h2>
               <p className="text-gray-700 leading-relaxed whitespace-pre-line">
                 {description}
@@ -190,7 +193,7 @@ const TourDetailPage = () => {
             {tour.attractions && tour.attractions.length > 0 && (
               <section className="bg-white rounded-lg border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  Itinerary highlights
+                  {m.tour_itinerary_title()}
                 </h2>
                 <ol className="space-y-3">
                   {tour.attractions.map((a, idx) => (
@@ -226,7 +229,7 @@ const TourDetailPage = () => {
                       {tour.price.toLocaleString()} {tour.currency}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500">per person</p>
+                  <p className="text-xs text-gray-500">{m.tour_per_person()}</p>
                 </div>
                 {tour.average_rating > 0 && (
                   <div className="text-right">
@@ -234,7 +237,7 @@ const TourDetailPage = () => {
                       ★ {tour.average_rating.toFixed(1)}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {tour.total_bookings} bookings
+                      {m.tour_bookings_count({ count: tour.total_bookings })}
                     </p>
                   </div>
                 )}
@@ -245,20 +248,20 @@ const TourDetailPage = () => {
                   <CalendarDays className="w-4 h-4" />
                   <span>
                     {tour.duration_days > 0
-                      ? `${tour.duration_days} days`
-                      : `${tour.duration_hours} hours`}{" "}
-                    · Max {tour.max_group_size} people
+                      ? m.duration_days({ count: tour.duration_days })
+                      : m.duration_hours({ count: tour.duration_hours })}{" "}
+                    · {m.tour_max_people({ count: tour.max_group_size })}
                   </span>
                 </div>
 
                 {upcomingSchedules.length === 0 ? (
                   <p className="text-sm text-gray-600 mt-2">
-                    No upcoming dates with available spots.
+                    {m.tour_no_dates()}
                   </p>
                 ) : (
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-900">
-                      Upcoming dates
+                      {m.tour_upcoming_dates()}
                     </p>
                     <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {upcomingSchedules.map((s) => (
@@ -273,7 +276,7 @@ const TourDetailPage = () => {
                               {new Date(s.end_date).toLocaleDateString()}
                             </p>
                             <p className="text-xs text-gray-600">
-                              {s.available_spots} spots left
+                              {m.tour_spots_left({ count: s.available_spots })}
                             </p>
                           </div>
                           <CheckCircle2 className="w-5 h-5 text-primary-500" />
@@ -288,17 +291,17 @@ const TourDetailPage = () => {
                   fullWidth
                   onClick={() => {
                     if (!isAuthenticated) {
-                      toast.error("Please login to book a tour");
+                      toast.error(m.toast_login_to_book());
                       navigate("/login");
                     } else if (upcomingSchedules[0]) {
                       handleBook(upcomingSchedules[0].id);
                     } else {
-                      toast.error("No available dates to book");
+                      toast.error(m.toast_no_dates_to_book());
                     }
                   }}
                   disabled={upcomingSchedules.length === 0}
                 >
-                  Book this tour
+                  {m.tour_book_button()}
                 </Button>
               </div>
             </section>
@@ -306,7 +309,7 @@ const TourDetailPage = () => {
             {tour.company && (
               <section className="bg-white rounded-lg border border-gray-200 p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                  Tour company
+                  {m.tour_company_title()}
                 </h3>
                 <p className="font-medium text-gray-900 mb-1">
                   {companyName}
@@ -315,15 +318,17 @@ const TourDetailPage = () => {
                   {getLocalizedText(tour.company.city)}
                 </p>
                 <p className="text-xs text-gray-500 mb-3">
-                  {tour.company.total_tours} tours · Rating{" "}
-                  {tour.company.rating.toFixed(1)}
+                  {m.tour_company_rating({
+                    count: tour.company.total_tours,
+                    rating: tour.company.rating.toFixed(1),
+                  })}
                 </p>
                 <Button
                   variant="outline"
                   fullWidth
                   onClick={() => navigate(`/companies/${tour.company_id}`)}
                 >
-                  View company
+                  {m.tour_view_company()}
                 </Button>
               </section>
             )}
@@ -335,4 +340,3 @@ const TourDetailPage = () => {
 };
 
 export default TourDetailPage;
-

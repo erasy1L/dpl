@@ -6,12 +6,16 @@ import { UserPreferences } from "../types/user.types";
 import categoryService from "../services/category.service";
 import userService from "../services/user.service";
 import toast from "react-hot-toast";
+import { getCategoryName } from "../utils/localization";
+import { useLocale } from "../contexts/LocaleContext";
+import * as m from "../paraglide/messages.js";
 
 interface PreferencesCardProps {
   onUpdate?: () => void;
 }
 
 const PreferencesCard = ({ onUpdate }: PreferencesCardProps) => {
+  useLocale();
   const [categories, setCategories] = useState<Category[]>([]);
   const [preferences, setPreferences] = useState<UserPreferences>({
     preferred_categories: [],
@@ -62,10 +66,10 @@ const PreferencesCard = ({ onUpdate }: PreferencesCardProps) => {
     try {
       setSaving(true);
       await userService.updatePreferences(preferences);
-      toast.success("Preferences saved successfully!");
+      toast.success(m.toast_preferences_saved());
       onUpdate?.();
     } catch (error) {
-      toast.error("Failed to save preferences");
+      toast.error(m.toast_preferences_save_failed());
     } finally {
       setSaving(false);
     }
@@ -93,14 +97,14 @@ const PreferencesCard = ({ onUpdate }: PreferencesCardProps) => {
       <div className="flex items-center gap-2 mb-6">
         <Settings className="w-5 h-5 text-primary-500" />
         <h3 className="text-lg font-semibold text-gray-900">
-          Update Your Preferences
+          {m.preferences_title()}
         </h3>
       </div>
 
       {/* Categories */}
       <div className="mb-6">
         <h4 className="text-sm font-medium text-gray-900 mb-3">
-          Favorite Categories
+          {m.preferences_categories()}
         </h4>
         <div className="space-y-2 max-h-48 overflow-y-auto">
           {categories.map((category) => (
@@ -115,7 +119,7 @@ const PreferencesCard = ({ onUpdate }: PreferencesCardProps) => {
                 className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
               />
               <span className="text-sm text-gray-700">
-                {category.name_en || category.name_ru || `Category #${category.id}`}
+                {getCategoryName(category)}
               </span>
             </label>
           ))}
@@ -125,7 +129,7 @@ const PreferencesCard = ({ onUpdate }: PreferencesCardProps) => {
       {/* Cities */}
       <div className="mb-6">
         <h4 className="text-sm font-medium text-gray-900 mb-3">
-          Preferred Cities
+          {m.preferences_cities()}
         </h4>
         <div className="space-y-2">
           {popularCities.map((city) => (
@@ -152,7 +156,7 @@ const PreferencesCard = ({ onUpdate }: PreferencesCardProps) => {
         onClick={handleSave}
         isLoading={saving}
       >
-        Save Preferences
+        {m.preferences_save()}
       </Button>
     </div>
   );

@@ -2,10 +2,13 @@ import { FormEvent, useMemo, useState } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { Lock, Compass } from "lucide-react";
 import { Button, Input } from "../../components/ui";
+import { useLocale } from "../../contexts/LocaleContext";
 import authService from "../../services/auth.service";
 import toast from "react-hot-toast";
+import * as m from "../../paraglide/messages.js";
 
 const ResetPasswordPage = () => {
+  useLocale();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = useMemo(() => searchParams.get("token") || "", [searchParams]);
@@ -17,25 +20,25 @@ const ResetPasswordPage = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!token) {
-      toast.error("Missing reset token");
+      toast.error(m.toast_missing_reset_token());
       return;
     }
     if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
+      toast.error(m.auth_error_password_min());
       return;
     }
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error(m.auth_error_passwords_mismatch());
       return;
     }
 
     try {
       setLoading(true);
       await authService.resetPassword(token, password);
-      toast.success("Password reset successful");
+      toast.success(m.toast_password_reset_success());
       navigate("/login");
     } catch (error: any) {
-      toast.error(error?.message || "Failed to reset password");
+      toast.error(error?.message || m.toast_password_reset_failed());
     } finally {
       setLoading(false);
     }
@@ -51,12 +54,14 @@ const ResetPasswordPage = () => {
               Tour<span className="text-primary-500">KZ</span>
             </span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Reset password</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {m.auth_reset_title()}
+          </h1>
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <Input
-            label="New password"
+            label={m.auth_new_password_label()}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -64,7 +69,7 @@ const ResetPasswordPage = () => {
             disabled={loading}
           />
           <Input
-            label="Confirm password"
+            label={m.auth_confirm_password_label()}
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -72,14 +77,14 @@ const ResetPasswordPage = () => {
             disabled={loading}
           />
           <Button type="submit" fullWidth isLoading={loading}>
-            Set new password
+            {m.auth_set_new_password()}
           </Button>
         </form>
 
         <p className="text-sm text-center text-gray-600">
-          Back to{" "}
+          {m.auth_back_to_sign_in()}{" "}
           <Link className="text-primary-600 hover:text-primary-500" to="/login">
-            Sign in
+            {m.auth_sign_in_link()}
           </Link>
         </p>
       </div>
@@ -88,4 +93,3 @@ const ResetPasswordPage = () => {
 };
 
 export default ResetPasswordPage;
-

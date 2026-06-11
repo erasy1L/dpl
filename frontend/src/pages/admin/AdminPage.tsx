@@ -12,8 +12,11 @@ import { getCurrentLocale, getLocalizedText } from "../../utils/localization";
 import CreateAttractionModal from "./components/CreateAttractionModal";
 import CategoryModal from "./components/CategoryModal";
 import AdminPagination from "./components/AdminPagination";
+import { useLocale } from "../../contexts/LocaleContext";
+import * as m from "../../paraglide/messages.js";
 
 const AdminPage = () => {
+  useLocale();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const canManageContent = user?.role === "admin" || user?.role === "manager";
@@ -80,7 +83,7 @@ const AdminPage = () => {
       ]);
     } catch (error) {
       console.error("Failed to load admin data:", error);
-      toast.error("Failed to load admin data");
+      toast.error(m.toast_admin_load_failed());
     } finally {
       setLoading(false);
     }
@@ -124,7 +127,7 @@ const AdminPage = () => {
     categoryIds: number[];
   }) => {
     if (!data.name.trim() || !data.city.trim()) {
-      toast.error("Name and city are required");
+      toast.error(m.toast_name_city_required());
       return;
     }
 
@@ -141,28 +144,28 @@ const AdminPage = () => {
     try {
       setSaving(true);
       await attractionService.createAttraction(payload);
-      toast.success("Attraction created");
+      toast.success(m.toast_attraction_created());
       setCreateAttractionOpen(false);
       setAttractionPage(1);
       await loadAll();
     } catch (error: any) {
-      toast.error(error?.message || "Failed to create attraction");
+      toast.error(error?.message || m.toast_create_attraction_failed());
     } finally {
       setSaving(false);
     }
   };
 
   const handleDeleteAttraction = async (id: number) => {
-    if (!confirm("Delete this attraction?")) return;
+    if (!confirm(m.confirm_delete_attraction())) return;
     try {
       await attractionService.deleteAttraction(id);
-      toast.success("Attraction deleted");
+      toast.success(m.toast_attraction_deleted());
       if (attractions.length === 1 && attractionPage > 1) {
         setAttractionPage(attractionPage - 1);
       }
       await loadAll();
     } catch (error: any) {
-      toast.error(error?.message || "Failed to delete attraction");
+      toast.error(error?.message || m.toast_delete_attraction_failed());
     }
   };
 
@@ -172,7 +175,7 @@ const AdminPage = () => {
     icon: string;
   }) => {
     if (!data.name_en.trim() || !data.icon.trim()) {
-      toast.error("name_en and icon are required");
+      toast.error(m.toast_category_name_icon_required());
       return;
     }
     try {
@@ -183,37 +186,37 @@ const AdminPage = () => {
           name_ru: data.name_ru?.trim() || undefined,
           icon: data.icon.trim(),
         });
-        toast.success("Category created");
+        toast.success(m.toast_category_created());
       } else if (editingCategory) {
         await categoryService.update(editingCategory.id, {
           name_en: data.name_en.trim(),
           name_ru: data.name_ru?.trim() || undefined,
           icon: data.icon.trim(),
         });
-        toast.success("Category updated");
+        toast.success(m.toast_category_updated());
       }
       setCategoryModalOpen(false);
       setEditingCategory(null);
       setCategoryPage(1);
       await loadAll();
     } catch (error: any) {
-      toast.error(error?.message || "Failed to save category");
+      toast.error(error?.message || m.toast_save_category_failed());
     } finally {
       setSaving(false);
     }
   };
 
   const handleDeleteCategory = async (id: number) => {
-    if (!confirm("Delete this category?")) return;
+    if (!confirm(m.confirm_delete_category())) return;
     try {
       await categoryService.delete(id);
-      toast.success("Category deleted");
+      toast.success(m.toast_category_deleted());
       if (categories.length === 1 && categoryPage > 1) {
         setCategoryPage(categoryPage - 1);
       }
       await loadAll();
     } catch (error: any) {
-      toast.error(error?.message || "Failed to delete category");
+      toast.error(error?.message || m.toast_delete_category_failed());
     }
   };
 
@@ -223,18 +226,18 @@ const AdminPage = () => {
   ) => {
     try {
       await adminService.updateUserRole(userId, role);
-      toast.success("Role updated");
+      toast.success(m.toast_role_updated());
       await loadAll();
     } catch (error: any) {
-      toast.error(error?.message || "Failed to update role");
+      toast.error(error?.message || m.toast_update_role_failed());
     }
   };
 
   if (!canManageContent) {
     return (
       <Container size="lg" className="py-10">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin panel</h1>
-        <p className="text-gray-600">You do not have access to this page.</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">{m.admin_no_access_title()}</h1>
+        <p className="text-gray-600">{m.admin_no_access_desc()}</p>
       </Container>
     );
   }
@@ -244,9 +247,9 @@ const AdminPage = () => {
       <Container size="xl">
         <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{m.admin_title()}</h1>
             <p className="text-gray-600">
-              Manage attractions, categories, and user roles.
+              {m.admin_subtitle()}
             </p>
           </div>
           <div className="flex gap-2">
@@ -258,10 +261,10 @@ const AdminPage = () => {
                 setCategoryModalOpen(true);
               }}
             >
-              New category
+              {m.admin_new_category()}
             </Button>
             <Button variant="primary" onClick={() => setCreateAttractionOpen(true)}>
-              New attraction
+              {m.admin_new_attraction()}
             </Button>
           </div>
         </div>
@@ -269,10 +272,10 @@ const AdminPage = () => {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <section className="xl:col-span-2 bg-white rounded-lg border border-gray-200 p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">Attractions</h2>
+              <h2 className="text-xl font-semibold text-gray-900">{m.admin_attractions()}</h2>
               <div className="w-72">
                 <Input
-                  placeholder="Search by id/name/city..."
+                  placeholder={m.admin_search_placeholder()}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -291,10 +294,10 @@ const AdminPage = () => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-gray-500 border-b">
-                        <th className="py-2 pr-2">ID</th>
-                        <th className="py-2 pr-2">Name</th>
-                        <th className="py-2 pr-2">City</th>
-                        <th className="py-2">Actions</th>
+                        <th className="py-2 pr-2">{m.table_id()}</th>
+                        <th className="py-2 pr-2">{m.table_name()}</th>
+                        <th className="py-2 pr-2">{m.table_city()}</th>
+                        <th className="py-2">{m.table_actions()}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -312,14 +315,14 @@ const AdminPage = () => {
                                   window.location.href = `/attractions/${a.id}?edit=1`;
                                 }}
                               >
-                                Edit
+                                {m.edit()}
                               </Button>
                               <Button
                                 variant="danger"
                                 size="sm"
                                 onClick={() => handleDeleteAttraction(a.id)}
                               >
-                                Delete
+                                {m.delete()}
                               </Button>
                             </div>
                           </td>
@@ -329,7 +332,7 @@ const AdminPage = () => {
                   </table>
                 </div>
                 {attractions.length === 0 && (
-                  <p className="text-sm text-gray-500">No attractions found.</p>
+                  <p className="text-sm text-gray-500">{m.admin_no_attractions()}</p>
                 )}
                 <AdminPagination
                   page={attractionPage}
@@ -341,7 +344,7 @@ const AdminPage = () => {
           </section>
 
           <section className="bg-white rounded-lg border border-gray-200 p-5">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Categories</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">{m.admin_categories()}</h2>
             {loading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
@@ -354,10 +357,10 @@ const AdminPage = () => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-gray-500 border-b">
-                        <th className="py-2 pr-2">ID</th>
-                        <th className="py-2 pr-2">Name</th>
-                        <th className="py-2 pr-2">Icon</th>
-                        <th className="py-2">Actions</th>
+                        <th className="py-2 pr-2">{m.table_id()}</th>
+                        <th className="py-2 pr-2">{m.table_name()}</th>
+                        <th className="py-2 pr-2">{m.table_icon()}</th>
+                        <th className="py-2">{m.table_actions()}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -377,14 +380,14 @@ const AdminPage = () => {
                                   setCategoryModalOpen(true);
                                 }}
                               >
-                                Edit
+                                {m.edit()}
                               </Button>
                               <Button
                                 variant="danger"
                                 size="sm"
                                 onClick={() => handleDeleteCategory(c.id)}
                               >
-                                Delete
+                                {m.delete()}
                               </Button>
                             </div>
                           </td>
@@ -405,7 +408,7 @@ const AdminPage = () => {
 
         {isAdmin && (
           <section className="mt-6 bg-white rounded-lg border border-gray-200 p-5">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">User roles</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">{m.admin_user_roles()}</h2>
             {loading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (

@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Button, Input, Modal } from "../../../components/ui";
 import { Category } from "../../../types/attraction.types";
+import { useLocale } from "../../../contexts/LocaleContext";
+import { getCategoryName } from "../../../utils/localization";
+import * as m from "../../../paraglide/messages.js";
 
 interface CreateAttractionModalProps {
   isOpen: boolean;
@@ -22,6 +25,7 @@ const CreateAttractionModal = ({
   saving,
   onSubmit,
 }: CreateAttractionModalProps) => {
+  useLocale();
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [description, setDescription] = useState("");
@@ -36,23 +40,23 @@ const CreateAttractionModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create attraction" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title={m.admin_create_attraction()} size="lg">
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
-            label="Name (localized)"
+            label={m.admin_name_localized()}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <Input
-            label="City (localized)"
+            label={m.admin_city_localized()}
             value={city}
             onChange={(e) => setCity(e.target.value)}
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Description (localized)
+            {m.admin_description_localized()}
           </label>
           <textarea
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[96px]"
@@ -61,7 +65,7 @@ const CreateAttractionModal = ({
           />
         </div>
         <div>
-          <h4 className="font-semibold text-gray-900 mb-2">Categories</h4>
+          <h4 className="font-semibold text-gray-900 mb-2">{m.admin_categories_label()}</h4>
           <div className="space-y-2 max-h-48 overflow-auto pr-1">
             {categories.map((c) => (
               <label key={c.id} className="flex items-center gap-2 text-sm text-gray-900">
@@ -75,17 +79,17 @@ const CreateAttractionModal = ({
                     setCategoryIds(next);
                   }}
                 />
-                {c.name_en}
+                {getCategoryName(c)}
               </label>
             ))}
           </div>
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={saving}>
-            Cancel
+            {m.cancel()}
           </Button>
           <Button variant="primary" onClick={handleSubmit} isLoading={saving}>
-            Create
+            {m.create()}
           </Button>
         </div>
       </div>
@@ -94,4 +98,3 @@ const CreateAttractionModal = ({
 };
 
 export default CreateAttractionModal;
-

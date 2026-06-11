@@ -1,4 +1,20 @@
-import { format, formatDistanceToNow, parseISO } from "date-fns";
+import { format, formatDistanceToNow, parseISO, type Locale } from "date-fns";
+import { enUS, ru, kk } from "date-fns/locale";
+import { getCurrentLocale } from "./localization";
+
+function getDateFnsLocale(): Locale {
+  const locale = getCurrentLocale();
+  if (locale === "ru") return ru;
+  if (locale === "kz") return kk;
+  return enUS;
+}
+
+function getIntlLocale(): string {
+  const locale = getCurrentLocale();
+  if (locale === "ru") return "ru-RU";
+  if (locale === "kz") return "kk-KZ";
+  return "en-US";
+}
 
 /**
  * Format a date string to a readable format
@@ -12,7 +28,7 @@ export function formatDate(
 ): string {
   try {
     const date = parseISO(dateString);
-    return format(date, formatStr);
+    return format(date, formatStr, { locale: getDateFnsLocale() });
   } catch (error) {
     return dateString;
   }
@@ -26,7 +42,10 @@ export function formatDate(
 export function formatRelativeTime(dateString: string): string {
   try {
     const date = parseISO(dateString);
-    return formatDistanceToNow(date, { addSuffix: true });
+    return formatDistanceToNow(date, {
+      addSuffix: true,
+      locale: getDateFnsLocale(),
+    });
   } catch (error) {
     return dateString;
   }
@@ -38,7 +57,7 @@ export function formatRelativeTime(dateString: string): string {
  * @returns Formatted number string
  */
 export function formatNumber(num: number): string {
-  return new Intl.NumberFormat("en-US").format(num);
+  return new Intl.NumberFormat(getIntlLocale()).format(num);
 }
 
 /**

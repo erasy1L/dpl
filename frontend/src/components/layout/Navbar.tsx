@@ -19,8 +19,12 @@ import {
 import { useState } from "react";
 import { Dropdown, Avatar } from "../ui";
 import Modal from "../ui/Modal";
+import LanguageSwitcher from "./LanguageSwitcher";
+import * as m from "../../paraglide/messages.js";
+import { useLocale } from "../../contexts/LocaleContext";
 
 const Navbar = () => {
+  useLocale();
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -36,33 +40,33 @@ const Navbar = () => {
 
   const userMenuItems = [
     {
-      label: "Profile",
+      label: m.nav_profile(),
       icon: <User className="w-4 h-4" />,
       onClick: () => navigate("/profile"),
     },
     {
-      label: "My Ratings",
+      label: m.nav_my_ratings(),
       icon: <Star className="w-4 h-4" />,
       onClick: () => navigate("/profile?tab=ratings"),
     },
     {
-      label: "Preferences",
+      label: m.nav_preferences(),
       icon: <Settings className="w-4 h-4" />,
       onClick: () => navigate("/profile?tab=preferences"),
     },
     {
-      label: "Security",
+      label: m.nav_security(),
       icon: <Shield className="w-4 h-4" />,
       onClick: () => navigate("/profile?tab=security"),
     },
     {
-      label: "My bookings",
+      label: m.nav_my_bookings(),
       icon: <Ticket className="w-4 h-4" />,
       onClick: () => navigate("/bookings"),
     },
     { divider: true },
     {
-      label: "Logout",
+      label: m.nav_logout(),
       icon: <LogOut className="w-4 h-4" />,
       onClick: handleLogout,
     },
@@ -85,23 +89,28 @@ const Navbar = () => {
 
             {/* Desktop Navigation — icon-only until 2xl; scrolls horizontally if needed */}
             <div className="hidden md:flex min-w-0 items-center justify-start gap-0.5 lg:gap-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-              <NavLink to="/" icon={Home} label="Home" active={isActive("/")} />
+              <NavLink
+                to="/"
+                icon={Home}
+                label={m.nav_home()}
+                active={isActive("/")}
+              />
               <NavLink
                 to="/attractions"
                 icon={Compass}
-                label="Explore"
+                label={m.nav_explore()}
                 active={location.pathname.startsWith("/attractions")}
               />
               <NavLink
                 to="/tours"
                 icon={Briefcase}
-                label="Tours"
+                label={m.nav_tours()}
                 active={location.pathname.startsWith("/tours")}
               />
               <NavLink
                 to="/companies"
                 icon={Briefcase}
-                label="Companies"
+                label={m.nav_companies()}
                 active={location.pathname.startsWith("/companies")}
               />
               {isAuthenticated && (
@@ -109,20 +118,20 @@ const Navbar = () => {
                   <NavLink
                     to="/recommendations"
                     icon={TrendingUp}
-                    label="For You"
+                    label={m.nav_recommendations()}
                     active={isActive("/recommendations")}
                   />
                   <NavLink
                     to="/analytics"
                     icon={BarChart3}
-                    label="Analytics"
+                    label={m.nav_analytics()}
                     active={isActive("/analytics")}
                   />
                   {(user?.role === "manager" || user?.role === "admin") && (
                     <NavLink
                       to="/admin"
                       icon={Shield}
-                      label="Admin"
+                      label={m.nav_admin()}
                       active={isActive("/admin")}
                     />
                   )}
@@ -138,7 +147,7 @@ const Navbar = () => {
                   <button
                     onClick={() => setSearchOpen(!searchOpen)}
                     className="p-2 text-gray-600 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors"
-                    aria-label="Search"
+                    aria-label={m.nav_search()}
                   >
                     <Search className="h-5 w-5" />
                   </button>
@@ -155,7 +164,9 @@ const Navbar = () => {
                           <p className="text-sm font-medium text-gray-900 truncate">
                             {user?.name}
                           </p>
-                          <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {user?.email}
+                          </p>
                           {user?.role && (
                             <p className="text-xs text-primary-600 capitalize truncate">
                               {user.role}
@@ -167,6 +178,10 @@ const Navbar = () => {
                     items={userMenuItems}
                     align="right"
                   />
+
+                  <div className="ml-2 xl:ml-4">
+                    <LanguageSwitcher />
+                  </div>
                 </>
               ) : (
                 <>
@@ -174,14 +189,15 @@ const Navbar = () => {
                     to="/login"
                     className="text-gray-700 hover:text-primary-500 font-medium transition-colors"
                   >
-                    Login
+                    {m.nav_login()}
                   </Link>
                   <Link
                     to="/register"
                     className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition-all"
                   >
-                    Sign Up
+                    {m.nav_sign_up()}
                   </Link>
+                  <LanguageSwitcher />
                 </>
               )}
             </div>
@@ -190,7 +206,7 @@ const Navbar = () => {
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 text-gray-600 hover:text-primary-500 shrink-0 justify-self-end"
-              aria-label="Toggle menu"
+              aria-label={m.nav_toggle_menu()}
             >
               {mobileMenuOpen ? (
                 <X className="h-6 w-6" />
@@ -206,32 +222,35 @@ const Navbar = () => {
       <Modal
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
-        title="Search Attractions"
+        title={m.search_modal_title()}
         size="lg"
       >
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Search attractions, cities, activities..."
+            placeholder={m.search_placeholder()}
             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             autoFocus
           />
         </div>
-        <p className="mt-4 text-sm text-gray-500">
-          Try searching for "museums", "Almaty", "nature"...
-        </p>
+        <p className="mt-4 text-sm text-gray-500">{m.search_hint()}</p>
       </Modal>
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-black/50 animate-fadeIn" onClick={() => setMobileMenuOpen(false)}>
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/50 animate-fadeIn"
+          onClick={() => setMobileMenuOpen(false)}
+        >
           <div
             className="absolute right-0 top-0 h-full w-64 bg-white shadow-xl animate-slideInRight"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+              <h2 className="text-lg font-semibold text-gray-900">
+                {m.nav_menu()}
+              </h2>
               <button
                 onClick={() => setMobileMenuOpen(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -245,44 +264,44 @@ const Navbar = () => {
                 <MobileNavLink
                   to="/"
                   icon={Home}
-                  label="Home"
+                  label={m.nav_home()}
                   onClick={() => setMobileMenuOpen(false)}
                 />
                 <MobileNavLink
                   to="/attractions"
                   icon={Compass}
-                  label="Explore"
+                  label={m.nav_explore()}
                   onClick={() => setMobileMenuOpen(false)}
                 />
                 <MobileNavLink
                   to="/tours"
                   icon={Briefcase}
-                  label="Tours"
+                  label={m.nav_tours()}
                   onClick={() => setMobileMenuOpen(false)}
                 />
                 <MobileNavLink
                   to="/companies"
                   icon={Briefcase}
-                  label="Companies"
+                  label={m.nav_companies()}
                   onClick={() => setMobileMenuOpen(false)}
                 />
                 <MobileNavLink
                   to="/recommendations"
                   icon={TrendingUp}
-                  label="Recommendations"
+                  label={m.nav_recommendations()}
                   onClick={() => setMobileMenuOpen(false)}
                 />
                 <MobileNavLink
                   to="/analytics"
                   icon={BarChart3}
-                  label="Analytics"
+                  label={m.nav_analytics()}
                   onClick={() => setMobileMenuOpen(false)}
                 />
                 {(user?.role === "manager" || user?.role === "admin") && (
                   <MobileNavLink
                     to="/admin"
                     icon={Shield}
-                    label="Admin"
+                    label={m.nav_admin()}
                     onClick={() => setMobileMenuOpen(false)}
                   />
                 )}
@@ -290,31 +309,31 @@ const Navbar = () => {
                   <MobileNavLink
                     to="/profile"
                     icon={User}
-                    label="Profile"
+                    label={m.nav_profile()}
                     onClick={() => setMobileMenuOpen(false)}
                   />
                   <MobileNavLink
                     to="/profile?tab=ratings"
                     icon={Star}
-                    label="My Ratings"
+                    label={m.nav_my_ratings()}
                     onClick={() => setMobileMenuOpen(false)}
                   />
                   <MobileNavLink
                     to="/bookings"
                     icon={Ticket}
-                    label="My bookings"
+                    label={m.nav_my_bookings()}
                     onClick={() => setMobileMenuOpen(false)}
                   />
                   <MobileNavLink
                     to="/profile?tab=preferences"
                     icon={Settings}
-                    label="Preferences"
+                    label={m.nav_preferences()}
                     onClick={() => setMobileMenuOpen(false)}
                   />
                   <MobileNavLink
                     to="/profile?tab=security"
                     icon={Shield}
-                    label="Security"
+                    label={m.nav_security()}
                     onClick={() => setMobileMenuOpen(false)}
                   />
                 </div>
@@ -326,33 +345,36 @@ const Navbar = () => {
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
                 >
                   <LogOut className="h-5 w-5" />
-                  <span className="font-medium">Logout</span>
+                  <span className="font-medium">{m.nav_logout()}</span>
                 </button>
               </div>
             ) : (
               <div className="p-4 space-y-2">
+                <div className="pb-2">
+                  <LanguageSwitcher />
+                </div>
                 <MobileNavLink
                   to="/"
                   icon={Home}
-                  label="Home"
+                  label={m.nav_home()}
                   onClick={() => setMobileMenuOpen(false)}
                 />
                 <MobileNavLink
                   to="/attractions"
                   icon={Compass}
-                  label="Explore"
+                  label={m.nav_explore()}
                   onClick={() => setMobileMenuOpen(false)}
                 />
                 <MobileNavLink
                   to="/tours"
                   icon={Briefcase}
-                  label="Tours"
+                  label={m.nav_tours()}
                   onClick={() => setMobileMenuOpen(false)}
                 />
                 <MobileNavLink
                   to="/companies"
                   icon={Briefcase}
-                  label="Companies"
+                  label={m.nav_companies()}
                   onClick={() => setMobileMenuOpen(false)}
                 />
                 <div className="border-t pt-3 mt-2 space-y-2">
@@ -361,14 +383,14 @@ const Navbar = () => {
                     className="block w-full text-center py-3 border border-primary-500 text-primary-500 rounded-lg font-medium hover:bg-primary-50 transition-colors"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Login
+                    {m.nav_login()}
                   </Link>
                   <Link
                     to="/register"
                     className="block w-full text-center py-3 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition-colors"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Sign Up
+                    {m.nav_sign_up()}
                   </Link>
                 </div>
               </div>
@@ -411,7 +433,12 @@ interface MobileNavLinkProps {
   onClick: () => void;
 }
 
-const MobileNavLink = ({ to, icon: Icon, label, onClick }: MobileNavLinkProps) => (
+const MobileNavLink = ({
+  to,
+  icon: Icon,
+  label,
+  onClick,
+}: MobileNavLinkProps) => (
   <Link
     to={to}
     onClick={onClick}
