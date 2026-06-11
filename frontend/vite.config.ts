@@ -14,8 +14,8 @@ export default defineConfig({
         target: "http://127.0.0.1:8080",
         changeOrigin: true,
         secure: false,
-        timeout: 60_000,
-        proxyTimeout: 60_000,
+        timeout: 180_000,
+        proxyTimeout: 180_000,
         configure(proxy) {
           proxy.on("error", (err) => {
             console.error("[vite proxy]", err.message);

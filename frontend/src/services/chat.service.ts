@@ -5,6 +5,9 @@ import {
   ChatSessionSummary,
 } from "../types/chat.types";
 
+// Matches backend Anthropic client timeout (120s) plus retry/backoff headroom.
+const chatRequestTimeoutMs = 180_000;
+
 class ChatService {
   async listSessions(): Promise<ChatSessionSummary[]> {
     const res = await api.get<{ sessions?: ChatSessionSummary[] }>(
@@ -23,10 +26,14 @@ class ChatService {
     sessionId: string | undefined,
     content: string,
   ): Promise<ChatSendResponse> {
-    const res = await api.post<ChatSendResponse>("/chat/message", {
-      session_id: sessionId || undefined,
-      content,
-    });
+    const res = await api.post<ChatSendResponse>(
+      "/chat/message",
+      {
+        session_id: sessionId || undefined,
+        content,
+      },
+      { timeout: chatRequestTimeoutMs },
+    );
     return res.data;
   }
 

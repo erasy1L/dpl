@@ -23,11 +23,14 @@ import (
 )
 
 const (
-	anthropicURL      = "https://api.anthropic.com/v1/messages"
-	anthropicVersion   = "2023-06-01"
-	anthropicModel     = "claude-sonnet-4-20250514"
-	maxHistoryMessages = 20
-	maxTokens          = 1024
+	anthropicURL           = "https://api.anthropic.com/v1/messages"
+	anthropicVersion       = "2023-06-01"
+	anthropicModel         = "claude-sonnet-4-6"
+	anthropicFallbackModel = "claude-haiku-4-5-20251001"
+	maxHistoryMessages     = 20
+	maxTokens              = 1024
+	anthropicMaxRetries    = 3
+	anthropicStatusOverloaded = 529
 )
 
 var (
@@ -312,6 +315,90 @@ func parseMarkers(text string) models.ChatMessageMetadata {
 	return meta
 }
 
+func isAnthropicOverloaded(statusCode int, raw []byte) bool {
+	if statusCode == anthropicStatusOverloaded {
+		return true
+	}
+	var ar anthropicResponse
+	if err := json.Unmarshal(raw, &ar); err == nil && ar.Error != nil && ar.Error.Type == "overloaded_error" {
+		return true
+	}
+	return false
+}
+
+func (s *service) callAnthropicOnce(ctx context.Context, key, model, system string, msgs []anthropicMsg) (string, int, []byte, error) {
+	body, err := json.Marshal(anthropicRequest{
+		Model:     model,
+		MaxTokens: maxTokens,
+		System:    system,
+		Messages:  msgs,
+	})
+	if err != nil {
+		return "", 0, nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, anthropicURL, bytes.NewReader(body))
+	if err != nil {
+		return "", 0, nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", key)
+	req.Header.Set("anthropic-version", anthropicVersion)
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return "", 0, nil, err
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return "", resp.StatusCode, raw, fmt.Errorf("anthropic API error: %s: %s", resp.Status, string(raw))
+	}
+	var ar anthropicResponse
+	if err := json.Unmarshal(raw, &ar); err != nil {
+		return "", resp.StatusCode, raw, err
+	}
+	if ar.Error != nil {
+		return "", resp.StatusCode, raw, fmt.Errorf("anthropic: %s", ar.Error.Message)
+	}
+	var out strings.Builder
+	for _, block := range ar.Content {
+		if block.Type == "text" {
+			out.WriteString(block.Text)
+		}
+	}
+	return strings.TrimSpace(out.String()), resp.StatusCode, raw, nil
+}
+
+func (s *service) callModelWithBackoff(ctx context.Context, key, model, system string, msgs []anthropicMsg) (string, bool, error) {
+	backoff := time.Second
+	var lastErr error
+	overloaded := false
+
+	for attempt := 0; attempt < anthropicMaxRetries; attempt++ {
+		if attempt > 0 {
+			select {
+			case <-ctx.Done():
+				return "", overloaded, ctx.Err()
+			case <-time.After(backoff):
+			}
+			backoff *= 2
+		}
+
+		text, statusCode, raw, err := s.callAnthropicOnce(ctx, key, model, system, msgs)
+		if err == nil {
+			return text, false, nil
+		}
+		lastErr = err
+		if !isAnthropicOverloaded(statusCode, raw) {
+			return "", false, err
+		}
+		overloaded = true
+	}
+
+	return "", overloaded, lastErr
+}
+
 func (s *service) callAnthropic(ctx context.Context, system string, history []models.ChatMessage, userContent string) (string, error) {
 	key := os.Getenv("ANTHROPIC_API_KEY")
 	if key == "" {
@@ -327,47 +414,16 @@ func (s *service) callAnthropic(ctx context.Context, system string, history []mo
 	}
 	msgs = append(msgs, anthropicMsg{Role: "user", Content: userContent})
 
-	body, err := json.Marshal(anthropicRequest{
-		Model:     anthropicModel,
-		MaxTokens: maxTokens,
-		System:    system,
-		Messages:  msgs,
-	})
-	if err != nil {
+	text, overloaded, err := s.callModelWithBackoff(ctx, key, anthropicModel, system, msgs)
+	if err == nil {
+		return text, nil
+	}
+	if !overloaded {
 		return "", err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, anthropicURL, bytes.NewReader(body))
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", key)
-	req.Header.Set("anthropic-version", anthropicVersion)
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	raw, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf("anthropic API error: %s: %s", resp.Status, string(raw))
-	}
-	var ar anthropicResponse
-	if err := json.Unmarshal(raw, &ar); err != nil {
-		return "", err
-	}
-	if ar.Error != nil {
-		return "", fmt.Errorf("anthropic: %s", ar.Error.Message)
-	}
-	var out strings.Builder
-	for _, block := range ar.Content {
-		if block.Type == "text" {
-			out.WriteString(block.Text)
-		}
-	}
-	return strings.TrimSpace(out.String()), nil
+	text, _, err = s.callModelWithBackoff(ctx, key, anthropicFallbackModel, system, msgs)
+	return text, err
 }
 
 func (s *service) SendMessage(ctx context.Context, sessionID *uuid.UUID, userID *uuid.UUID, content string) (*models.ChatMessage, uuid.UUID, error) {
